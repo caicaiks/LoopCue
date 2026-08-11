@@ -1,0 +1,57 @@
+name: LoopCue
+options:
+  bundleIdPrefix: com.loopcue
+  deploymentTarget:
+    macOS: "13.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+  groupSortPosition: top
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "13.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Automatic
+targets:
+  LoopCue:
+    type: application
+    platform: macOS
+    sources:
+      - LoopCue
+    info:
+      path: LoopCue/Resources/Info.plist
+      properties:
+        LSMinimumSystemVersion: "13.0"
+        LSUIElement: true
+        NSHumanReadableCopyright: "Copyright © 2026 LoopCue"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.loopcue.LoopCue
+        GENERATE_INFOPLIST_FILE: false
+        ENABLE_HARDENED_RUNTIME: true
+  LoopCueTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - LoopCueTests
+    dependencies:
+      - target: LoopCue
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.loopcue.LoopCueTests
+        GENERATE_INFOPLIST_FILE: true
+schemes:
+  LoopCue:
+    build:
+      targets:
+        LoopCue: all
+        LoopCueTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: true
+      targets:
+        - LoopCueTests
+

@@ -1,0 +1,601 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		5D73312BA0E0455A3F651CA4 /* ReminderIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 864658FDBFADBEF8E381AB97 /* ReminderIntent.swift */; };
+		6E789ABC908847FE9F2CBF1A /* ReminderEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7492AB3862B8F37A25360B7 /* ReminderEffect.swift */; };
+		98B8029A54A7967961A8750B /* ReminderConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EBDCFD1A59939AC299789E1 /* ReminderConfig.swift */; };
+		9F919F5FE45D76CBDBCA7CE7 /* LoopCueApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71D7B45F6AF0FE3D7239120D /* LoopCueApp.swift */; };
+		C35CB858A556AC690A751427 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B5143CC11FE454DE62B3B55 /* MenuBarView.swift */; };
+		CE16FE7C7D595C913CC9D842 /* ReminderValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F65A58DD358D1621C2E3F1B /* ReminderValidationTests.swift */; };
+		E2CFE51DE915F6126E7367BD /* ReminderEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD40B4B037825B2DFACA2AB0 /* ReminderEngine.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		E71370FB179BE525638D194A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F3E3CA4AAEA714ADE3AC3635 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 50ECA1B851740898F1D29A7F;
+			remoteInfo = LoopCue;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		089D8FBDC2ABDA0A82FA3D72 /* .gitkeep */ = {isa = PBXFileReference; path = .gitkeep; sourceTree = "<group>"; };
+		0B5143CC11FE454DE62B3B55 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
+		125D01D88F69400DA55B2DBA /* .gitkeep */ = {isa = PBXFileReference; path = .gitkeep; sourceTree = "<group>"; };
+		1363C49A0C62521F7850350A /* .gitkeep */ = {isa = PBXFileReference; path = .gitkeep; sourceTree = "<group>"; };
+		188883A409B64DABD0E1A414 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		1D9EBD304DA32C9F799997BA /* .gitkeep */ = {isa = PBXFileReference; path = .gitkeep; sourceTree = "<group>"; };
+		1E07709ECCE949CC6A4FEABB /* LoopCue.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LoopCue.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3CFBBEC48AE626E6DCD5B40E /* .gitkeep */ = {isa = PBXFileReference; path = .gitkeep; sourceTree = "<group>"; };
+		3EBDCFD1A59939AC299789E1 /* ReminderConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderConfig.swift; sourceTree = "<group>"; };
+		413050A93D5A596843399751 /* .gitkeep */ = {isa = PBXFileReference; path = .gitkeep; sourceTree = "<group>"; };
+		468F5B86056D7160865EAD7E /* .gitkeep */ = {isa = PBXFileReference; path = .gitkeep; sourceTree = "<group>"; };
+		48ED3D266E085532E5F3E453 /* .gitkeep */ = {isa = PBXFileReference; path = .gitkeep; sourceTree = "<group>"; };
+		66DDA87D8A71A5702A645050 /* .gitkeep */ = {isa = PBXFileReference; path = .gitkeep; sourceTree = "<group>"; };
+		71D7B45F6AF0FE3D7239120D /* LoopCueApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopCueApp.swift; sourceTree = "<group>"; };
+		7F65A58DD358D1621C2E3F1B /* ReminderValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderValidationTests.swift; sourceTree = "<group>"; };
+		864658FDBFADBEF8E381AB97 /* ReminderIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderIntent.swift; sourceTree = "<group>"; };
+		AE7C221EE06AAE46814AC386 /* LoopCueTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LoopCueTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B0056821DB9DA8D3ECB346C4 /* .gitkeep */ = {isa = PBXFileReference; path = .gitkeep; sourceTree = "<group>"; };
+		C7492AB3862B8F37A25360B7 /* ReminderEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderEffect.swift; sourceTree = "<group>"; };
+		CD40B4B037825B2DFACA2AB0 /* ReminderEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderEngine.swift; sourceTree = "<group>"; };
+		D6A94CCE0DE691F5624D800C /* .gitkeep */ = {isa = PBXFileReference; path = .gitkeep; sourceTree = "<group>"; };
+		E1A7CB8FD49FB66CC28229B7 /* .gitkeep */ = {isa = PBXFileReference; path = .gitkeep; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		04DA87115F734A2252F556BE /* MenuBar */ = {
+			isa = PBXGroup;
+			children = (
+				0B5143CC11FE454DE62B3B55 /* MenuBarView.swift */,
+			);
+			path = MenuBar;
+			sourceTree = "<group>";
+		};
+		0A52136015CF2830314AB4EA /* Persistence */ = {
+			isa = PBXGroup;
+			children = (
+				089D8FBDC2ABDA0A82FA3D72 /* .gitkeep */,
+			);
+			path = Persistence;
+			sourceTree = "<group>";
+		};
+		149A1CBBED3DC478F59B4E39 /* Domain */ = {
+			isa = PBXGroup;
+			children = (
+				ED52E024A78703A143648B8C /* Models */,
+				C7492AB3862B8F37A25360B7 /* ReminderEffect.swift */,
+				864658FDBFADBEF8E381AB97 /* ReminderIntent.swift */,
+			);
+			path = Domain;
+			sourceTree = "<group>";
+		};
+		1CA9649D739BCA11ED843890 /* Notifications */ = {
+			isa = PBXGroup;
+			children = (
+				1363C49A0C62521F7850350A /* .gitkeep */,
+			);
+			path = Notifications;
+			sourceTree = "<group>";
+		};
+		2352E24616CF70BBBC538370 /* Activity */ = {
+			isa = PBXGroup;
+			children = (
+				D6A94CCE0DE691F5624D800C /* .gitkeep */,
+			);
+			path = Activity;
+			sourceTree = "<group>";
+		};
+		3E55D90C80BFB530D85E2988 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				71D7B45F6AF0FE3D7239120D /* LoopCueApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		416C2E63652E1545B4ECAAC6 /* TestDoubles */ = {
+			isa = PBXGroup;
+			children = (
+				B0056821DB9DA8D3ECB346C4 /* .gitkeep */,
+			);
+			path = TestDoubles;
+			sourceTree = "<group>";
+		};
+		4E9A6EEA45CEBFE8F3814357 /* StrongReminder */ = {
+			isa = PBXGroup;
+			children = (
+				48ED3D266E085532E5F3E453 /* .gitkeep */,
+			);
+			path = StrongReminder;
+			sourceTree = "<group>";
+		};
+		52CABEE564042FAEA2DB67FB /* Application */ = {
+			isa = PBXGroup;
+			children = (
+				CD40B4B037825B2DFACA2AB0 /* ReminderEngine.swift */,
+			);
+			path = Application;
+			sourceTree = "<group>";
+		};
+		530D700CF2C8A397ABCE8D36 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1E07709ECCE949CC6A4FEABB /* LoopCue.app */,
+				AE7C221EE06AAE46814AC386 /* LoopCueTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		54C7EDC5C655574998C9BD71 /* LoginItem */ = {
+			isa = PBXGroup;
+			children = (
+				3CFBBEC48AE626E6DCD5B40E /* .gitkeep */,
+			);
+			path = LoginItem;
+			sourceTree = "<group>";
+		};
+		7767999F1570683AE790B4D6 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				04DA87115F734A2252F556BE /* MenuBar */,
+				BE709D76BFBA1AC1EABE3288 /* Onboarding */,
+				8BCAF8F4C265D7E8F5B59B6E /* ReminderEditor */,
+				A6724EA278DA1FF387EA3619 /* ReminderList */,
+				FD4F6400BC8A934AC1B31CDC /* Settings */,
+				4E9A6EEA45CEBFE8F3814357 /* StrongReminder */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		8BCAF8F4C265D7E8F5B59B6E /* ReminderEditor */ = {
+			isa = PBXGroup;
+			children = (
+				66DDA87D8A71A5702A645050 /* .gitkeep */,
+			);
+			path = ReminderEditor;
+			sourceTree = "<group>";
+		};
+		9B68A7E93551DAF865E2D17B /* Domain */ = {
+			isa = PBXGroup;
+			children = (
+				7F65A58DD358D1621C2E3F1B /* ReminderValidationTests.swift */,
+			);
+			path = Domain;
+			sourceTree = "<group>";
+		};
+		A6724EA278DA1FF387EA3619 /* ReminderList */ = {
+			isa = PBXGroup;
+			children = (
+				125D01D88F69400DA55B2DBA /* .gitkeep */,
+			);
+			path = ReminderList;
+			sourceTree = "<group>";
+		};
+		AEC419DE1DF8A36ADEFFC985 /* Infrastructure */ = {
+			isa = PBXGroup;
+			children = (
+				2352E24616CF70BBBC538370 /* Activity */,
+				54C7EDC5C655574998C9BD71 /* LoginItem */,
+				1CA9649D739BCA11ED843890 /* Notifications */,
+				E7B6E86D5C675628F90AD87C /* Overlay */,
+				0A52136015CF2830314AB4EA /* Persistence */,
+			);
+			path = Infrastructure;
+			sourceTree = "<group>";
+		};
+		BC170F3100703C8070DB96ED /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				413050A93D5A596843399751 /* .gitkeep */,
+				188883A409B64DABD0E1A414 /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		BE709D76BFBA1AC1EABE3288 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				1D9EBD304DA32C9F799997BA /* .gitkeep */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		D018E9856C3E35E558C0BBA5 /* LoopCueTests */ = {
+			isa = PBXGroup;
+			children = (
+				9B68A7E93551DAF865E2D17B /* Domain */,
+				416C2E63652E1545B4ECAAC6 /* TestDoubles */,
+			);
+			path = LoopCueTests;
+			sourceTree = "<group>";
+		};
+		D35842F237F0857DA5BD16B0 /* LoopCue */ = {
+			isa = PBXGroup;
+			children = (
+				3E55D90C80BFB530D85E2988 /* App */,
+				52CABEE564042FAEA2DB67FB /* Application */,
+				149A1CBBED3DC478F59B4E39 /* Domain */,
+				7767999F1570683AE790B4D6 /* Features */,
+				AEC419DE1DF8A36ADEFFC985 /* Infrastructure */,
+				BC170F3100703C8070DB96ED /* Resources */,
+			);
+			path = LoopCue;
+			sourceTree = "<group>";
+		};
+		E7B6E86D5C675628F90AD87C /* Overlay */ = {
+			isa = PBXGroup;
+			children = (
+				E1A7CB8FD49FB66CC28229B7 /* .gitkeep */,
+			);
+			path = Overlay;
+			sourceTree = "<group>";
+		};
+		ED52E024A78703A143648B8C /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				3EBDCFD1A59939AC299789E1 /* ReminderConfig.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		F822D8E87402DD9A20E030A1 = {
+			isa = PBXGroup;
+			children = (
+				D35842F237F0857DA5BD16B0 /* LoopCue */,
+				D018E9856C3E35E558C0BBA5 /* LoopCueTests */,
+				530D700CF2C8A397ABCE8D36 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		FD4F6400BC8A934AC1B31CDC /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				468F5B86056D7160865EAD7E /* .gitkeep */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		27655516684C94E0A4EE7635 /* LoopCueTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B33AE511D675970233861000 /* Build configuration list for PBXNativeTarget "LoopCueTests" */;
+			buildPhases = (
+				9ADA022B0539E413F776CF1D /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				39489F41C48F29A758442D3F /* PBXTargetDependency */,
+			);
+			name = LoopCueTests;
+			packageProductDependencies = (
+			);
+			productName = LoopCueTests;
+			productReference = AE7C221EE06AAE46814AC386 /* LoopCueTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		50ECA1B851740898F1D29A7F /* LoopCue */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D2F8B8219A6E92B96EFA611F /* Build configuration list for PBXNativeTarget "LoopCue" */;
+			buildPhases = (
+				96FDC9820444046B61853C43 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LoopCue;
+			packageProductDependencies = (
+			);
+			productName = LoopCue;
+			productReference = 1E07709ECCE949CC6A4FEABB /* LoopCue.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F3E3CA4AAEA714ADE3AC3635 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					27655516684C94E0A4EE7635 = {
+						ProvisioningStyle = Automatic;
+					};
+					50ECA1B851740898F1D29A7F = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 674285E19D58AC2A9B184511 /* Build configuration list for PBXProject "LoopCue" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = F822D8E87402DD9A20E030A1;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 530D700CF2C8A397ABCE8D36 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				50ECA1B851740898F1D29A7F /* LoopCue */,
+				27655516684C94E0A4EE7635 /* LoopCueTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		96FDC9820444046B61853C43 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9F919F5FE45D76CBDBCA7CE7 /* LoopCueApp.swift in Sources */,
+				C35CB858A556AC690A751427 /* MenuBarView.swift in Sources */,
+				98B8029A54A7967961A8750B /* ReminderConfig.swift in Sources */,
+				6E789ABC908847FE9F2CBF1A /* ReminderEffect.swift in Sources */,
+				E2CFE51DE915F6126E7367BD /* ReminderEngine.swift in Sources */,
+				5D73312BA0E0455A3F651CA4 /* ReminderIntent.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9ADA022B0539E413F776CF1D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CE16FE7C7D595C913CC9D842 /* ReminderValidationTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		39489F41C48F29A758442D3F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 50ECA1B851740898F1D29A7F /* LoopCue */;
+			targetProxy = E71370FB179BE525638D194A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		043A4337743E42301B8489AE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.loopcue.LoopCueTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LoopCue.app/Contents/MacOS/LoopCue";
+			};
+			name = Debug;
+		};
+		AB71E9481158071867C4BBAA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LoopCue/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.loopcue.LoopCue;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		E8EB5EBD250957694847AF29 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		EB6F197873E37725C9676419 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LoopCue/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.loopcue.LoopCue;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		F6F609B1AD167C0D9378AB91 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.loopcue.LoopCueTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LoopCue.app/Contents/MacOS/LoopCue";
+			};
+			name = Release;
+		};
+		FC957DB6BD966ECE480DE988 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		674285E19D58AC2A9B184511 /* Build configuration list for PBXProject "LoopCue" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FC957DB6BD966ECE480DE988 /* Debug */,
+				E8EB5EBD250957694847AF29 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B33AE511D675970233861000 /* Build configuration list for PBXNativeTarget "LoopCueTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				043A4337743E42301B8489AE /* Debug */,
+				F6F609B1AD167C0D9378AB91 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D2F8B8219A6E92B96EFA611F /* Build configuration list for PBXNativeTarget "LoopCue" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EB6F197873E37725C9676419 /* Debug */,
+				AB71E9481158071867C4BBAA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = F3E3CA4AAEA714ADE3AC3635 /* Project object */;
+}
