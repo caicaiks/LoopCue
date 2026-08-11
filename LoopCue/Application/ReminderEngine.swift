@@ -7,11 +7,16 @@ import Foundation
 /// - 通过 AsyncStream 发布不可变快照。
 actor ReminderEngine {
     private let store: any ReminderStore
+    /// Debug 时间倍率：仅用于测试把 5 分钟压缩为 30 秒（技术方案 19.6）。
+    /// Release 恒为 1。倍率只作用于 reconcile 的有效时长推进，
+    /// 不改变存储的配置与业务语义。
+    private let timeScale: Double
     private let snapshotContinuation: AsyncStream<AppSnapshot>.Continuation
     let snapshots: AsyncStream<AppSnapshot>
 
-    init(store: any ReminderStore) {
+    init(store: any ReminderStore, timeScale: Double = 1) {
         self.store = store
+        self.timeScale = timeScale
         let (stream, continuation) = AsyncStream.makeStream(of: AppSnapshot.self)
         self.snapshots = stream
         self.snapshotContinuation = continuation
@@ -19,9 +24,29 @@ actor ReminderEngine {
 
     /// 启动恢复：加载持久化状态并发布首个快照。
     func start(now: Date) throws -> AppSnapshot {
-        let snapshot = try currentSnapshot(now: now)
+        let stored = try store.loadReminders()
+        // 恢复仍处于强提醒的轮次：重新排队覆盖效果（技术方案 13.1）。
+        // 已有同 dedupeKey 的 pending 效果时跳过，避免重复。
+        let pendingKeys = Set(try store.loadPendingEffects().map(\.dedupeKey))
+        for item in stored {
+            guard let cycle = item.cycle, cycle.phase == .strongPending else { continue }
+            let dedupeKey = "strong:\(cycle.id)"
+            guard !pendingKeys.contains(dedupeKey) else { continue }
+            let effect = ReminderEffect.presentStrongOverlay(
+                reminderID: cycle.reminderID,
+                cycleID: cycle.id
+            )
+            try store.appendEffect(StoredEffect(id: UUID(), effect: effect, dedupeKey: dedupeKey, isDone: false))
+        }
+        let snapshot = AppSnapshot.make(from: stored, now: now)
         publish(snapshot)
         return snapshot
+    }
+
+    /// 清空全部数据（测试 / 用户重置）。
+    func clearAll(now: Date) throws {
+        try store.resetAll()
+        publish(try currentSnapshot(now: now))
     }
 
     /// 依据持久化时间点推进有效时长（技术方案 8）。
@@ -29,7 +54,7 @@ actor ReminderEngine {
         let stored = try store.loadReminders()
         for item in stored {
             guard item.config.isEnabled, var cycle = item.cycle else { continue }
-            let deltaSeconds = now.timeIntervalSince(cycle.lastCheckpointAt)
+            let deltaSeconds = now.timeIntervalSince(cycle.lastCheckpointAt) * timeScale
             guard deltaSeconds > 0 else { continue }
             let reduction = ReminderReducer.advance(
                 cycle,

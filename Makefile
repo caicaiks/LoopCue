@@ -1,7 +1,7 @@
 DERIVED_DATA_DIR ?= .build/DerivedData
 CONFIGURATION ?= Debug
 
-.PHONY: help generate build release test clean open
+.PHONY: help generate build release test clean run open
 
 help: ## 显示所有命令
 	@echo "可用命令："
@@ -22,6 +22,8 @@ test: generate ## 运行全部单元测试
 clean: ## 清理本地构建产物（.build/DerivedData）
 	./scripts/clean.sh
 
+run: generate ## 构建并启动应用（菜单栏）
+	./scripts/run.sh
+
 open: generate ## 生成工程并用 Xcode 打开
 	open LoopCue.xcodeproj
-

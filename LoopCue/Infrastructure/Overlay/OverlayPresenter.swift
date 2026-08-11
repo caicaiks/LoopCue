@@ -2,6 +2,13 @@ import AppKit
 import Foundation
 import SwiftUI
 
+/// borderless 样式的 NSPanel 默认不能成为 key window，
+/// 会导致按钮点击/键盘事件不可达。覆写后让覆盖窗口可交互。
+private final class OverlayPanel: NSPanel {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { true }
+}
+
 /// 全屏强提醒展示抽象（供 EffectExecutor 调用）。
 protocol OverlayPresenting: Sendable {
     func present(reminderID: UUID, cycleID: UUID) async
@@ -17,22 +24,31 @@ protocol OverlayPresenting: Sendable {
 final class OverlayPresenter: OverlayPresenting {
     private var panelsByCycle: [UUID: [NSPanel]] = [:]
     private let onComplete: (UUID, UUID) -> Void
+    private let onDismiss: (UUID, UUID) -> Void
 
-    init(onComplete: @escaping (UUID, UUID) -> Void) {
+    init(
+        onComplete: @escaping (UUID, UUID) -> Void,
+        onDismiss: @escaping (UUID, UUID) -> Void
+    ) {
         self.onComplete = onComplete
+        self.onDismiss = onDismiss
     }
 
     func present(reminderID: UUID, cycleID: UUID) async {
         guard panelsByCycle[cycleID] == nil else { return } // 幂等
+        // 菜单栏（accessory）应用需要先激活自身，覆盖窗口才能带到最前。
+        NSApp.activate(ignoringOtherApps: true)
         var panels: [NSPanel] = []
         for screen in NSScreen.screens {
-            let panel = NSPanel(
+            let panel = OverlayPanel(
                 contentRect: screen.frame,
                 styleMask: [.borderless],
                 backing: .buffered,
                 defer: false
             )
-            panel.level = .modalPanel
+            panel.isReleasedWhenClosed = false
+            panel.hidesOnDeactivate = false
+            panel.level = .screenSaver
             panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
             panel.isOpaque = false
             panel.backgroundColor = .black.withAlphaComponent(0.88)
@@ -40,12 +56,15 @@ final class OverlayPresenter: OverlayPresenting {
                 rootView: StrongReminderView(
                     reminderID: reminderID,
                     cycleID: cycleID,
-                    onComplete: onComplete
+                    onComplete: onComplete,
+                    onDismiss: onDismiss
                 )
             )
             panel.makeKeyAndOrderFront(nil)
             panels.append(panel)
         }
+        // 窗口已在最前，设置 key window 让键盘焦点落在完成按钮。
+        panels.first?.makeKeyAndOrderFront(nil)
         panelsByCycle[cycleID] = panels
     }
 

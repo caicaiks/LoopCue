@@ -5,6 +5,10 @@ import SwiftUI
 @MainActor
 final class AppModel: ObservableObject {
     @Published private(set) var snapshot: AppSnapshot?
+    /// nil = 尚未确定；false = 通知权限未开启
+    @Published private(set) var notificationAllowed: Bool?
+    /// 具体授权状态描述，用于诊断
+    @Published private(set) var notificationStatusDetail: String?
     private var task: Task<Void, Never>?
 
     init(engine: ReminderEngine) {
@@ -18,5 +22,12 @@ final class AppModel: ObservableObject {
     func set(_ snapshot: AppSnapshot) {
         self.snapshot = snapshot
     }
-}
 
+    func setNotificationAllowed(_ allowed: Bool?) {
+        self.notificationAllowed = allowed
+    }
+
+    func setNotificationStatusDetail(_ detail: String?) {
+        self.notificationStatusDetail = detail
+    }
+}

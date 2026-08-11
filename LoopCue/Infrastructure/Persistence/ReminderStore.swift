@@ -26,4 +26,7 @@ protocol ReminderStore: Sendable {
     func appendEffect(_ effect: StoredEffect) throws
     func markEffectDone(id: UUID) throws
     func loadPendingEffects() throws -> [StoredEffect]
+
+    /// 清空全部本地数据（测试 / 用户重置用）。
+    func resetAll() throws
 }

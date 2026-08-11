@@ -24,6 +24,34 @@ final class ReminderEngineTests: XCTestCase {
         XCTAssertNotNil(snapshot.reminders.first?.cycleID)
     }
 
+    func testDebugTimeScaleFiresAfterScaledInterval() async throws {
+        let store = try CoreDataReminderStore(inMemory: true)
+        let engine = ReminderEngine(store: store, timeScale: 10)
+        let config = makeConfig()
+        try await engine.handle(.create(config), now: t0)
+
+        // 真实 30 秒 × 10 倍速 = 5 分钟 → 弱提醒
+        try await engine.reconcile(now: t0.addingTimeInterval(30))
+        let snapshot = try await engine.start(now: t0.addingTimeInterval(30))
+        XCTAssertEqual(snapshot.reminders.first?.phase, .weakPending)
+    }
+
+    func testDefaultTimeScaleRequiresFullInterval() async throws {
+        let store = try CoreDataReminderStore(inMemory: true)
+        let engine = ReminderEngine(store: store)
+        let config = makeConfig()
+        try await engine.handle(.create(config), now: t0)
+
+        // 默认 1 倍速：30 秒不足，300 秒刚好触发
+        try await engine.reconcile(now: t0.addingTimeInterval(30))
+        let early = try await engine.start(now: t0.addingTimeInterval(30))
+        XCTAssertEqual(early.reminders.first?.phase, .counting)
+
+        try await engine.reconcile(now: t0.addingTimeInterval(300))
+        let late = try await engine.start(now: t0.addingTimeInterval(300))
+        XCTAssertEqual(late.reminders.first?.phase, .weakPending)
+    }
+
     func testReconcileAdvancesToWeakPendingAndQueuesNotification() async throws {
         let store = try CoreDataReminderStore(inMemory: true)
         let engine = ReminderEngine(store: store)
@@ -111,4 +139,3 @@ final class ReminderEngineTests: XCTestCase {
         XCTAssertEqual(snapshot.reminders.first?.config.name, "重启恢复")
     }
 }
-

@@ -14,6 +14,4 @@ xcodebuild \
   -configuration "$CONFIGURATION" \
   -destination 'platform=macOS' \
   -derivedDataPath "$DERIVED_DATA_DIR" \
-  CODE_SIGNING_ALLOWED=NO \
   build
-

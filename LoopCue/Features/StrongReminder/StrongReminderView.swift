@@ -8,6 +8,7 @@ struct StrongReminderView: View {
     let reminderID: UUID
     let cycleID: UUID
     let onComplete: (UUID, UUID) -> Void
+    let onDismiss: (UUID, UUID) -> Void
 
     var body: some View {
         VStack(spacing: 20) {
@@ -24,6 +25,11 @@ struct StrongReminderView: View {
             }
             .controlSize(.large)
             .keyboardShortcut(.defaultAction)
+
+            Button("暂时关闭") {
+                onDismiss(reminderID, cycleID)
+            }
+            .keyboardShortcut(.cancelAction)
         }
         .padding(40)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -31,4 +37,3 @@ struct StrongReminderView: View {
         .foregroundStyle(.white)
     }
 }
-

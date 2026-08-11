@@ -156,6 +156,18 @@ final class CoreDataReminderStore: ReminderStore, @unchecked Sendable {
         }
     }
 
+    func resetAll() throws {
+        try perform { context in
+            for entityName in ["ManagedReminder", "ManagedEvent", "ManagedEffect"] {
+                let request = NSFetchRequest<NSManagedObject>(entityName: entityName)
+                let objects = try context.fetch(request)
+                for object in objects {
+                    context.delete(object)
+                }
+            }
+        }
+    }
+
     // MARK: - Helpers
 
     private func perform<T>(_ block: @escaping (NSManagedObjectContext) throws -> T) throws -> T {
