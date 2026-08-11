@@ -29,14 +29,23 @@ LoopCue/
 ## 快速开始
 
 ```bash
-# 1. 生成并打开工程（结构变更后需重新生成）
+# 1. 查看全部命令
+make help
+
+# 2. 生成工程并打开（结构变更后自动重新生成）
 xcodegen generate
 open LoopCue.xcodeproj
 
-# 2. 命令行构建与测试
-xcodebuild -project LoopCue.xcodeproj -scheme LoopCue -destination 'platform=macOS' build
-xcodebuild -project LoopCue.xcodeproj -scheme LoopCue -destination 'platform=macOS' test
+# 3. 常用命令（等价于 scripts/ 下的脚本）
+make generate   # 重新生成 .xcodeproj
+make build      # Debug 构建
+make release    # Release 构建
+make test       # 运行全部单元测试
+make clean      # 清理本地构建产物
+make open       # 生成并打开 Xcode
 ```
+
+说明：`make test` 的单元测试运行器需要连接系统 `testmanagerd` 服务，必须在沙盒外（例如你的终端）执行；`make build` / `make generate` 可在受限环境运行。构建产物统一输出到 `.build/DerivedData`（已被 gitignore 排除）。
 
 ## 文档
 
