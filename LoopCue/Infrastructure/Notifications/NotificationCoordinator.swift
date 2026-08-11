@@ -8,21 +8,23 @@ protocol EffectExecutor: Sendable {
 }
 
 /// 系统效果执行器：弱提醒通知 + 清理。
-///
-/// 全屏强提醒（Overlay）属于 M0-A 真机验证项，暂以 no-op 占位。
 struct SystemEffectExecutor: EffectExecutor {
+    private let overlay: any OverlayPresenting
+
+    init(overlay: any OverlayPresenting) {
+        self.overlay = overlay
+    }
+
     func execute(_ effect: ReminderEffect) async {
         switch effect {
         case .sendWeakNotification(let reminderID, let cycleID):
             await sendWeakNotification(reminderID: reminderID, cycleID: cycleID)
         case .clearNotifications(let reminderID, let cycleID):
             await clear(reminderID: reminderID, cycleID: cycleID)
-        case .presentStrongOverlay:
-            // TODO(M0-A): 接入 OverlayPresenter 多屏全屏窗口
-            break
-        case .dismissStrongOverlay:
-            // TODO(M0-A): 关闭对应 cycleID 的覆盖窗口
-            break
+        case .presentStrongOverlay(let reminderID, let cycleID):
+            await overlay.present(reminderID: reminderID, cycleID: cycleID)
+        case .dismissStrongOverlay(let reminderID, let cycleID):
+            await overlay.dismiss(reminderID: reminderID, cycleID: cycleID)
         }
     }
 
@@ -57,4 +59,3 @@ struct SystemEffectExecutor: EffectExecutor {
         center.removeDeliveredNotifications(withIdentifiers: [prefix])
     }
 }
-

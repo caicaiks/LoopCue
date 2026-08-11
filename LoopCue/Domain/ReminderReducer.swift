@@ -54,7 +54,7 @@ enum ReminderReducer {
                     cycle.phase = .strongPending
                     cycle.strongTriggeredAt = now
                     events.append(.init(reminderID: cycle.reminderID, cycleID: cycle.id, type: .strongTriggered, occurredAt: now))
-                    effects.append(.presentStrongOverlay(cycleID: cycle.id))
+                    effects.append(.presentStrongOverlay(reminderID: cycle.reminderID, cycleID: cycle.id))
                 }
 
             case .snoozed:
@@ -82,7 +82,7 @@ enum ReminderReducer {
                 if cycle.overlaySuppressionRemaining! <= .zero {
                     cycle.overlaySuppressionRemaining = nil
                     events.append(.init(reminderID: cycle.reminderID, cycleID: cycle.id, type: .strongRepeated, occurredAt: now))
-                    effects.append(.presentStrongOverlay(cycleID: cycle.id))
+                    effects.append(.presentStrongOverlay(reminderID: cycle.reminderID, cycleID: cycle.id))
                 }
             }
         }
@@ -139,7 +139,7 @@ enum ReminderReducer {
                 events: [.init(reminderID: reminderID, cycleID: cycleID, type: .snoozed, occurredAt: now)],
                 effects: [
                     .clearNotifications(reminderID: reminderID, cycleID: cycleID),
-                    .dismissStrongOverlay(cycleID: cycleID),
+                    .dismissStrongOverlay(reminderID: reminderID, cycleID: cycleID),
                 ]
             )
 
@@ -164,7 +164,7 @@ enum ReminderReducer {
             return Reduction(
                 cycle: cycle,
                 events: [.init(reminderID: reminderID, cycleID: cycleID, type: .overlayDismissed, occurredAt: now)],
-                effects: [.dismissStrongOverlay(cycleID: cycleID)]
+                effects: [.dismissStrongOverlay(reminderID: reminderID, cycleID: cycleID)]
             )
 
         case .create, .update, .delete, .setEnabled:
@@ -195,7 +195,7 @@ enum ReminderReducer {
             events: [.init(reminderID: reminderID, cycleID: cycleID, type: .autoCompleted, occurredAt: now)],
             effects: [
                 .clearNotifications(reminderID: reminderID, cycleID: cycleID),
-                .dismissStrongOverlay(cycleID: cycleID),
+                .dismissStrongOverlay(reminderID: reminderID, cycleID: cycleID),
             ]
         )
     }
@@ -214,7 +214,7 @@ enum ReminderReducer {
             events: [.init(reminderID: reminderID, cycleID: cycleID, type: type, occurredAt: now)],
             effects: [
                 .clearNotifications(reminderID: reminderID, cycleID: cycleID),
-                .dismissStrongOverlay(cycleID: cycleID),
+                .dismissStrongOverlay(reminderID: reminderID, cycleID: cycleID),
             ]
         )
     }
@@ -223,4 +223,3 @@ enum ReminderReducer {
         ReminderCycle(reminderID: cycle.reminderID, policy: cycle.policy, startedAt: startedAt)
     }
 }
-

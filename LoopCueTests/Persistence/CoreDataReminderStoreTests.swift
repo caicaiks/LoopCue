@@ -60,7 +60,7 @@ final class CoreDataReminderStoreTests: XCTestCase {
         let store = try CoreDataReminderStore(inMemory: true)
         let effect = StoredEffect(
             id: UUID(),
-            effect: .presentStrongOverlay(cycleID: UUID()),
+            effect: .presentStrongOverlay(reminderID: UUID(), cycleID: UUID()),
             dedupeKey: "strong:x",
             isDone: false
         )
@@ -106,4 +106,3 @@ final class CoreDataReminderStoreTests: XCTestCase {
         XCTAssertEqual(restored.first?.cycle, cycle)
     }
 }
-

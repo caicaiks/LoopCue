@@ -10,22 +10,28 @@
 		00F372D5F3417E63E78A6F7F /* ReminderEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634D03DA45C9423ADEEEC119 /* ReminderEngineTests.swift */; };
 		133152AF10DA6363B585298F /* Duration+Convenience.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB88F075E90570DCD44F810B /* Duration+Convenience.swift */; };
 		1A28636A05C77912CBA4922F /* ReminderCycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E435A09E2F251680CED4E297 /* ReminderCycle.swift */; };
+		1F30F4BA615641CC198D980A /* DefaultReminders.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29F08AEA02CFB845E2E05F9 /* DefaultReminders.swift */; };
 		2DF44A1F67EC5A4631E0F7FB /* ReminderReducerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A352F863CBC6FFF29C0E4036 /* ReminderReducerTests.swift */; };
+		2EA9818A4235950C72335EB4 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32114E7C8266C28843CD677A /* AppEnvironment.swift */; };
 		3A8AC74AC579AD6086164856 /* NotificationCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE186E575ECE98924A7E5B1B /* NotificationCoordinator.swift */; };
 		44DE53F848F48A527773F9A6 /* ReminderEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22A5C7E8AD8D5E928EA5ED3F /* ReminderEvent.swift */; };
 		4ADCB8EA574B377E5535C80E /* ReminderReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40075A8C8473397233522935 /* ReminderReducer.swift */; };
 		536E4DAC9D2FCE283AEE0C22 /* AppSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0531B355FD883D24D3F596A1 /* AppSnapshot.swift */; };
 		5D73312BA0E0455A3F651CA4 /* ReminderIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 864658FDBFADBEF8E381AB97 /* ReminderIntent.swift */; };
 		6E789ABC908847FE9F2CBF1A /* ReminderEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7492AB3862B8F37A25360B7 /* ReminderEffect.swift */; };
+		725FE3325CD4948EAE25C1E3 /* OverlayPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA941D31DC6F15447F7CD242 /* OverlayPresenter.swift */; };
 		7FB037221516D0396D5602A1 /* ReminderStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0171C71BBB51998C0769146 /* ReminderStore.swift */; };
 		92F057F5B7FB85F712192BAA /* CoreDataReminderStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4514AAFA0EE6C1668545CF3 /* CoreDataReminderStore.swift */; };
 		94C96D433515C655D8542F5B /* ReminderValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD396B65257C8823105E5E5A /* ReminderValidation.swift */; };
 		98B8029A54A7967961A8750B /* ReminderConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EBDCFD1A59939AC299789E1 /* ReminderConfig.swift */; };
+		99CACBCC5083A4027F10A6A9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F94870744BC0B1D094470D51 /* AppDelegate.swift */; };
 		9F919F5FE45D76CBDBCA7CE7 /* LoopCueApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71D7B45F6AF0FE3D7239120D /* LoopCueApp.swift */; };
 		A86D9AF63BD8BB97EB1E1599 /* EffectDispatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D223F50D82DB369895473F9 /* EffectDispatcher.swift */; };
 		C35CB858A556AC690A751427 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B5143CC11FE454DE62B3B55 /* MenuBarView.swift */; };
 		CB2CD28D8A9B870AB8600182 /* CoreDataReminderStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A205866855516161A9DCC5C /* CoreDataReminderStoreTests.swift */; };
+		CCDC13191A2F08DFEE5666BA /* StrongReminderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 822123E034051EF8BFDC4521 /* StrongReminderView.swift */; };
 		CE16FE7C7D595C913CC9D842 /* ReminderValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F65A58DD358D1621C2E3F1B /* ReminderValidationTests.swift */; };
+		D81D7F2222474F670D1B395B /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72819DB99F420225FF7A2D40 /* AppModel.swift */; };
 		E0F1E5A648108E3D8E93D9A8 /* Scheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7148A3277E4A5CA07281864B /* Scheduler.swift */; };
 		E2CFE51DE915F6126E7367BD /* ReminderEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD40B4B037825B2DFACA2AB0 /* ReminderEngine.swift */; };
 		F7F066E8CA3A32BAE4B599D8 /* CyclePolicySnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCCFEE3122D9B905383E0006 /* CyclePolicySnapshot.swift */; };
@@ -53,6 +59,7 @@
 		1E07709ECCE949CC6A4FEABB /* LoopCue.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LoopCue.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		22A5C7E8AD8D5E928EA5ED3F /* ReminderEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderEvent.swift; sourceTree = "<group>"; };
 		2D223F50D82DB369895473F9 /* EffectDispatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EffectDispatcher.swift; sourceTree = "<group>"; };
+		32114E7C8266C28843CD677A /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
 		3CFBBEC48AE626E6DCD5B40E /* .gitkeep */ = {isa = PBXFileReference; path = .gitkeep; sourceTree = "<group>"; };
 		3EBDCFD1A59939AC299789E1 /* ReminderConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderConfig.swift; sourceTree = "<group>"; };
 		40075A8C8473397233522935 /* ReminderReducer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderReducer.swift; sourceTree = "<group>"; };
@@ -63,13 +70,17 @@
 		66DDA87D8A71A5702A645050 /* .gitkeep */ = {isa = PBXFileReference; path = .gitkeep; sourceTree = "<group>"; };
 		7148A3277E4A5CA07281864B /* Scheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scheduler.swift; sourceTree = "<group>"; };
 		71D7B45F6AF0FE3D7239120D /* LoopCueApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoopCueApp.swift; sourceTree = "<group>"; };
+		72819DB99F420225FF7A2D40 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		7F65A58DD358D1621C2E3F1B /* ReminderValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderValidationTests.swift; sourceTree = "<group>"; };
+		822123E034051EF8BFDC4521 /* StrongReminderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrongReminderView.swift; sourceTree = "<group>"; };
 		864658FDBFADBEF8E381AB97 /* ReminderIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderIntent.swift; sourceTree = "<group>"; };
 		A352F863CBC6FFF29C0E4036 /* ReminderReducerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderReducerTests.swift; sourceTree = "<group>"; };
+		AA941D31DC6F15447F7CD242 /* OverlayPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayPresenter.swift; sourceTree = "<group>"; };
 		AE186E575ECE98924A7E5B1B /* NotificationCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationCoordinator.swift; sourceTree = "<group>"; };
 		AE7C221EE06AAE46814AC386 /* LoopCueTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LoopCueTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B0056821DB9DA8D3ECB346C4 /* .gitkeep */ = {isa = PBXFileReference; path = .gitkeep; sourceTree = "<group>"; };
 		C0171C71BBB51998C0769146 /* ReminderStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderStore.swift; sourceTree = "<group>"; };
+		C29F08AEA02CFB845E2E05F9 /* DefaultReminders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultReminders.swift; sourceTree = "<group>"; };
 		C7492AB3862B8F37A25360B7 /* ReminderEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderEffect.swift; sourceTree = "<group>"; };
 		CD396B65257C8823105E5E5A /* ReminderValidation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderValidation.swift; sourceTree = "<group>"; };
 		CD40B4B037825B2DFACA2AB0 /* ReminderEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderEngine.swift; sourceTree = "<group>"; };
@@ -78,6 +89,7 @@
 		E1A7CB8FD49FB66CC28229B7 /* .gitkeep */ = {isa = PBXFileReference; path = .gitkeep; sourceTree = "<group>"; };
 		E435A09E2F251680CED4E297 /* ReminderCycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderCycle.swift; sourceTree = "<group>"; };
 		F4514AAFA0EE6C1668545CF3 /* CoreDataReminderStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataReminderStore.swift; sourceTree = "<group>"; };
+		F94870744BC0B1D094470D51 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		FCCFEE3122D9B905383E0006 /* CyclePolicySnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CyclePolicySnapshot.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -142,6 +154,10 @@
 		3E55D90C80BFB530D85E2988 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				F94870744BC0B1D094470D51 /* AppDelegate.swift */,
+				32114E7C8266C28843CD677A /* AppEnvironment.swift */,
+				72819DB99F420225FF7A2D40 /* AppModel.swift */,
+				C29F08AEA02CFB845E2E05F9 /* DefaultReminders.swift */,
 				71D7B45F6AF0FE3D7239120D /* LoopCueApp.swift */,
 			);
 			path = App;
@@ -159,6 +175,7 @@
 			isa = PBXGroup;
 			children = (
 				48ED3D266E085532E5F3E453 /* .gitkeep */,
+				822123E034051EF8BFDC4521 /* StrongReminderView.swift */,
 			);
 			path = StrongReminder;
 			sourceTree = "<group>";
@@ -294,6 +311,7 @@
 			isa = PBXGroup;
 			children = (
 				E1A7CB8FD49FB66CC28229B7 /* .gitkeep */,
+				AA941D31DC6F15447F7CD242 /* OverlayPresenter.swift */,
 			);
 			path = Overlay;
 			sourceTree = "<group>";
@@ -405,14 +423,19 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				99CACBCC5083A4027F10A6A9 /* AppDelegate.swift in Sources */,
+				2EA9818A4235950C72335EB4 /* AppEnvironment.swift in Sources */,
+				D81D7F2222474F670D1B395B /* AppModel.swift in Sources */,
 				536E4DAC9D2FCE283AEE0C22 /* AppSnapshot.swift in Sources */,
 				92F057F5B7FB85F712192BAA /* CoreDataReminderStore.swift in Sources */,
 				F7F066E8CA3A32BAE4B599D8 /* CyclePolicySnapshot.swift in Sources */,
+				1F30F4BA615641CC198D980A /* DefaultReminders.swift in Sources */,
 				133152AF10DA6363B585298F /* Duration+Convenience.swift in Sources */,
 				A86D9AF63BD8BB97EB1E1599 /* EffectDispatcher.swift in Sources */,
 				9F919F5FE45D76CBDBCA7CE7 /* LoopCueApp.swift in Sources */,
 				C35CB858A556AC690A751427 /* MenuBarView.swift in Sources */,
 				3A8AC74AC579AD6086164856 /* NotificationCoordinator.swift in Sources */,
+				725FE3325CD4948EAE25C1E3 /* OverlayPresenter.swift in Sources */,
 				98B8029A54A7967961A8750B /* ReminderConfig.swift in Sources */,
 				1A28636A05C77912CBA4922F /* ReminderCycle.swift in Sources */,
 				6E789ABC908847FE9F2CBF1A /* ReminderEffect.swift in Sources */,
@@ -423,6 +446,7 @@
 				7FB037221516D0396D5602A1 /* ReminderStore.swift in Sources */,
 				94C96D433515C655D8542F5B /* ReminderValidation.swift in Sources */,
 				E0F1E5A648108E3D8E93D9A8 /* Scheduler.swift in Sources */,
+				CCDC13191A2F08DFEE5666BA /* StrongReminderView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

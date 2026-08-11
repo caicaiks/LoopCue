@@ -125,8 +125,8 @@ actor ReminderEngine {
         switch effect {
         case .sendWeakNotification(_, let cycleID): return "weak:\(cycleID)"
         case .clearNotifications(_, let cycleID): return "clear:\(cycleID)"
-        case .presentStrongOverlay(let cycleID): return "strong:\(cycleID)"
-        case .dismissStrongOverlay(let cycleID): return "dismiss:\(cycleID)"
+        case .presentStrongOverlay(_, let cycleID): return "strong:\(cycleID)"
+        case .dismissStrongOverlay(_, let cycleID): return "dismiss:\(cycleID)"
         }
     }
 }
@@ -150,4 +150,3 @@ extension ReminderIntent {
         }
     }
 }
-

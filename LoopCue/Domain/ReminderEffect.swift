@@ -4,6 +4,6 @@ import Foundation
 enum ReminderEffect: Equatable, Sendable, Codable {
     case sendWeakNotification(reminderID: UUID, cycleID: UUID)
     case clearNotifications(reminderID: UUID, cycleID: UUID)
-    case presentStrongOverlay(cycleID: UUID)
-    case dismissStrongOverlay(cycleID: UUID)
+    case presentStrongOverlay(reminderID: UUID, cycleID: UUID)
+    case dismissStrongOverlay(reminderID: UUID, cycleID: UUID)
 }
