@@ -1,7 +1,7 @@
 import Foundation
 
 /// 周期行动的图标（系统符号名）。
-enum ReminderIcon: String, Sendable, Equatable, CaseIterable {
+enum ReminderIcon: String, Sendable, Equatable, CaseIterable, Codable {
     case standUp = "figure.stand"
     case water = "drop.fill"
     case farGaze = "eye"
@@ -10,13 +10,13 @@ enum ReminderIcon: String, Sendable, Equatable, CaseIterable {
 }
 
 /// 离开电脑策略（技术方案 6.4）。
-enum AwayPolicy: Sendable, Equatable {
+enum AwayPolicy: Sendable, Equatable, Codable {
     case pause(threshold: Duration)
     case complete(threshold: Duration)
 }
 
 /// 用户保存的周期行动配置（PRD 数据模型草案 / 技术方案 6.1）。
-struct ReminderConfig: Identifiable, Equatable, Sendable {
+struct ReminderConfig: Identifiable, Equatable, Sendable, Codable {
     let id: UUID
     var name: String
     var icon: ReminderIcon
@@ -61,4 +61,3 @@ struct ReminderConfig: Identifiable, Equatable, Sendable {
         self.updatedAt = updatedAt
     }
 }
-

@@ -7,7 +7,7 @@ LoopCue（叮刻）是一款 macOS 菜单栏常驻的渐进式周期提醒器：
 ## 当前状态
 
 - 文档阶段已完成：PRD、技术方案、规范速览、AGENTS.md。
-- M0 进行中：工程骨架与领域内核（ReminderReducer 状态机 + 校验）已完成，23 个单元测试通过；Scheduler / Core Data / 通知 / 全屏待实现。
+- M0 进行中：工程骨架、领域内核与纵向闭环核心（Engine / Core Data 持久化 / Outbox / EffectDispatcher）已完成，34 个单元测试通过；真机通知与全屏 Overlay 待验证。
 
 ## 目录结构
 

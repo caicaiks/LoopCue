@@ -4,7 +4,7 @@ import Foundation
 ///
 /// 编辑提醒默认从下一轮生效，因此轮次必须持有创建时的策略副本，
 /// 不能直接读取可能在轮次中途被修改的配置。
-struct CyclePolicySnapshot: Equatable, Sendable {
+struct CyclePolicySnapshot: Equatable, Sendable, Codable {
     let interval: Duration
     let escalationDelay: Duration?
     let snoozeDuration: Duration
@@ -19,4 +19,3 @@ struct CyclePolicySnapshot: Equatable, Sendable {
         self.awayPolicy = config.awayPolicy
     }
 }
-

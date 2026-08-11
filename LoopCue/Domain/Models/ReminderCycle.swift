@@ -4,7 +4,7 @@ import Foundation
 ///
 /// 暂停、睡眠、锁屏、闲置与非生效时段是阶段外部的时间门控，
 /// 不改变基础阶段，因此不在此枚举中建模 Paused。
-enum CyclePhase: String, Sendable, Equatable {
+enum CyclePhase: String, Sendable, Equatable, Codable {
     case counting
     case weakPending
     case snoozed
@@ -12,7 +12,7 @@ enum CyclePhase: String, Sendable, Equatable {
 }
 
 /// 一轮的状态（技术方案 6.3）。
-struct ReminderCycle: Identifiable, Equatable, Sendable {
+struct ReminderCycle: Identifiable, Equatable, Sendable, Codable {
     let id: UUID
     let reminderID: UUID
     var phase: CyclePhase
@@ -32,6 +32,9 @@ struct ReminderCycle: Identifiable, Equatable, Sendable {
     /// 是否已观察到用户在场（起身自动完成的前置条件，技术方案 6.4）。
     var hasObservedPresence: Bool = false
 
+    /// 上次结算时间点。reconcile 用它与当前时间的差推进有效时长。
+    var lastCheckpointAt: Date
+
     let startedAt: Date
     var weakTriggeredAt: Date?
     var strongTriggeredAt: Date?
@@ -46,6 +49,7 @@ struct ReminderCycle: Identifiable, Equatable, Sendable {
         self.reminderID = reminderID
         self.phase = .counting
         self.policy = policy
+        self.lastCheckpointAt = startedAt
         self.startedAt = startedAt
     }
 }

@@ -1,7 +1,7 @@
 import Foundation
 
 /// 轮次事件类型（PRD 数据模型 ReminderEvent / 技术方案 7.1）。
-enum ReminderEventType: String, Sendable, Equatable {
+enum ReminderEventType: String, Sendable, Equatable, Codable {
     case weakTriggered
     case weakRepeated
     case strongTriggered
@@ -14,7 +14,7 @@ enum ReminderEventType: String, Sendable, Equatable {
 }
 
 /// 一次轮次事件记录。
-struct ReminderEvent: Identifiable, Equatable, Sendable {
+struct ReminderEvent: Identifiable, Equatable, Sendable, Codable {
     let id: UUID
     let reminderID: UUID
     let cycleID: UUID
@@ -35,4 +35,3 @@ struct ReminderEvent: Identifiable, Equatable, Sendable {
         self.occurredAt = occurredAt
     }
 }
-
