@@ -134,6 +134,31 @@ final class CoreDataReminderStoreTests: XCTestCase {
         XCTAssertEqual(decoded.displayScope, .all)
     }
 
+    func testLegacyCycleWithoutDisplayScopeDecodes() throws {
+        // 复现升级崩溃路径：旧 cycleData 中 policy 缺少 displayScope 字段时，
+        // ReminderCycle 整体必须可解码，且回退为 .all（PRD 默认覆盖所有显示器）。
+        let config = makeConfig(name: "旧数据")
+        let cycle = ReminderCycle(
+            reminderID: config.id,
+            policy: CyclePolicySnapshot(config: config),
+            startedAt: Date()
+        )
+        let encoder = JSONEncoder()
+        let fullData = try encoder.encode(cycle)
+        var object = try JSONSerialization.jsonObject(with: fullData) as! [String: Any]
+        guard var policy = object["policy"] as? [String: Any] else {
+            XCTFail("policy 字段缺失")
+            return
+        }
+        policy.removeValue(forKey: "displayScope")
+        object["policy"] = policy
+        let legacyData = try JSONSerialization.data(withJSONObject: object)
+
+        let decoded = try JSONDecoder().decode(ReminderCycle.self, from: legacyData)
+        XCTAssertEqual(decoded.policy.displayScope, .all)
+        XCTAssertEqual(decoded.policy.interval, cycle.policy.interval)
+    }
+
     func testRestartRecoveryWithSQLite() throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
