@@ -5,6 +5,9 @@
 ## User settings
 xcuserdata/
 
+# XcodeGen 生成的工程（project.yml 为唯一事实来源），仅保留本地，不提交
+LoopCue.xcodeproj/
+
 ## Obj-C/Swift specific
 *.hmap
 
