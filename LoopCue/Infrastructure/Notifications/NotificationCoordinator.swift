@@ -4,7 +4,6 @@ import UserNotifications
 /// 通知 Category 与动作标识（PRD F-04 / 技术方案 10.2）。
 enum NotificationActionID {
     static let category = "REMINDER_RESPONSE"
-    static let complete = "COMPLETE"
     static let snooze = "SNOOZE"
 }
 
@@ -13,13 +12,8 @@ enum NotificationUserInfoKey {
     static let cycleID = "cycleID"
 }
 
-/// 注册带「已完成 / 稍后提醒」操作按钮的通知 Category。
+/// 注册带「稍后提醒」操作按钮的通知 Category；点击通知正文即完成确认。
 func registerNotificationCategories() {
-    let complete = UNNotificationAction(
-        identifier: NotificationActionID.complete,
-        title: "已完成",
-        options: []
-    )
     let snooze = UNNotificationAction(
         identifier: NotificationActionID.snooze,
         title: "稍后提醒",
@@ -27,14 +21,14 @@ func registerNotificationCategories() {
     )
     let category = UNNotificationCategory(
         identifier: NotificationActionID.category,
-        actions: [complete, snooze],
+        actions: [snooze],
         intentIdentifiers: [],
         options: []
     )
     UNUserNotificationCenter.current().setNotificationCategories([category])
 }
 
-/// 处理通知回调：前台展示 + 动作按钮回执（技术方案 10.4）。
+/// 处理通知回调：前台展示 + 点击正文完成 / 稍后提醒（技术方案 10.4）。
 final class NotificationResponseHandler: NSObject, UNUserNotificationCenterDelegate, @unchecked Sendable {
     private let engine: ReminderEngine
 
@@ -72,19 +66,17 @@ final class NotificationResponseHandler: NSObject, UNUserNotificationCenterDeleg
         let actionIdentifier = response.actionIdentifier
         Task {
             switch actionIdentifier {
-            case NotificationActionID.complete:
-                try? await engine.handle(
-                    .complete(reminderID: reminderID, cycleID: cycleID),
-                    now: Date()
-                )
             case NotificationActionID.snooze:
                 try? await engine.handle(
                     .snooze(reminderID: reminderID, cycleID: cycleID),
                     now: Date()
                 )
             default:
-                // 点击通知正文：打开主窗口（M1 实现）。
-                break
+                // 点击通知正文即确认完成，无需再选择操作按钮。
+                try? await engine.handle(
+                    .complete(reminderID: reminderID, cycleID: cycleID),
+                    now: Date()
+                )
             }
         }
     }
