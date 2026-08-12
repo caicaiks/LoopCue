@@ -27,7 +27,14 @@ private struct MenuBarContent: View {
                 MenuBarView(
                     appModel: appModel,
                     onSend: { appDelegate.send($0) },
-                    onOpenList: { openWindow(id: "reminderList") },
+                    onOpenList: {
+                        // 菜单栏（accessory）应用需先激活自身，普通窗口才能带到最前
+                        //（技术方案 12；与 OverlayPresenter 一致）。
+                        NSApp.activate(ignoringOtherApps: true)
+                        DispatchQueue.main.async {
+                            openWindow(id: "reminderList")
+                        }
+                    },
                     onReset: { appDelegate.resetForTesting() },
                     isLoginItemEnabled: appDelegate.isLoginItemEnabled,
                     loginItemNeedsApproval: appDelegate.loginItemNeedsApproval,
