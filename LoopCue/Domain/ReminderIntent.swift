@@ -27,4 +27,9 @@ enum ReminderIntent: Equatable, Sendable {
     case skip(reminderID: UUID, cycleID: UUID)
     case triggerWeakNow(reminderID: UUID, cycleID: UUID)
     case dismissOverlay(reminderID: UUID, cycleID: UUID)
+
+    case pauseReminder(UUID, PauseRequest)
+    case resumeReminder(UUID)
+    case pauseAll(PauseRequest)
+    case resumeAll
 }

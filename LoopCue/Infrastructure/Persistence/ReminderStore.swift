@@ -4,6 +4,17 @@ import Foundation
 struct StoredReminder: Equatable, Sendable {
     var config: ReminderConfig
     var cycle: ReminderCycle?
+    var runtime: ReminderRuntimeState
+
+    init(
+        config: ReminderConfig,
+        cycle: ReminderCycle?,
+        runtime: ReminderRuntimeState = ReminderRuntimeState()
+    ) {
+        self.config = config
+        self.cycle = cycle
+        self.runtime = runtime
+    }
 }
 
 /// Outbox 中的一条待执行副作用。

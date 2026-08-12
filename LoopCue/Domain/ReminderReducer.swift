@@ -93,7 +93,8 @@ enum ReminderReducer {
     /// 应用带回执的 Intent。cycleID 与当前轮不一致时返回无副作用的归约。
     static func apply(_ intent: ReminderIntent, to cycle: ReminderCycle, now: Date) -> Reduction {
         switch intent {
-        case .create, .update, .delete, .setEnabled:
+        case .create, .update, .delete, .setEnabled,
+             .pauseReminder, .resumeReminder, .pauseAll, .resumeAll:
             // 配置类 Intent 不改变轮次状态，由 Engine 负责。
             return .unchanged(cycle)
         case .complete(let reminderID, let cycleID),
@@ -167,7 +168,8 @@ enum ReminderReducer {
                 effects: [.dismissStrongOverlay(reminderID: reminderID, cycleID: cycleID)]
             )
 
-        case .create, .update, .delete, .setEnabled:
+        case .create, .update, .delete, .setEnabled,
+             .pauseReminder, .resumeReminder, .pauseAll, .resumeAll:
             return .unchanged(cycle)
         }
     }

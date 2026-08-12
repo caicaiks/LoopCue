@@ -17,6 +17,10 @@ struct ReminderEditorView: View {
     @State private var intervalMinutes: Int
     @State private var escalationEnabled: Bool
     @State private var escalationMinutes: Int
+    @State private var scheduleEnabled: Bool
+    @State private var scheduleWeekdays: Set<Int>
+    @State private var scheduleStartHour: Int
+    @State private var scheduleEndHour: Int
     @State private var snoozeMinutes: Int
     @State private var maxSnoozeCount: Int
     @State private var awayKind: AwayKind
@@ -35,6 +39,11 @@ struct ReminderEditorView: View {
         _intervalMinutes = State(initialValue: Self.minutes(of: draft?.interval) ?? 60)
         _escalationEnabled = State(initialValue: draft?.escalationDelay != nil)
         _escalationMinutes = State(initialValue: Self.minutes(of: draft?.escalationDelay) ?? 15)
+        let schedule = draft?.activeSchedule ?? .alwaysOn
+        _scheduleEnabled = State(initialValue: schedule != .alwaysOn)
+        _scheduleWeekdays = State(initialValue: schedule.weekdayMask)
+        _scheduleStartHour = State(initialValue: schedule.startMinute / 60)
+        _scheduleEndHour = State(initialValue: (schedule.endMinute + 59) / 60)
         _snoozeMinutes = State(initialValue: Self.minutes(of: draft?.snoozeDuration) ?? 10)
         _maxSnoozeCount = State(initialValue: draft?.maxSnoozeCount ?? 2)
         let policy = draft?.awayPolicy ?? .pause(threshold: .minutes(5))
@@ -61,6 +70,19 @@ struct ReminderEditorView: View {
                 Toggle("未回应升级为全屏提醒", isOn: $escalationEnabled)
                 if escalationEnabled {
                     Stepper("等待 \(escalationMinutes) 分钟", value: $escalationMinutes, in: 1...1440)
+                }
+            }
+
+            Section("生效时段") {
+                Toggle("仅在指定时段生效", isOn: $scheduleEnabled)
+                if scheduleEnabled {
+                    HStack {
+                        ForEach(1...7, id: \.self) { day in
+                            dayButton(day)
+                        }
+                    }
+                    Stepper("开始：\(scheduleStartHour) 点", value: $scheduleStartHour, in: 0...23)
+                    Stepper("结束：\(scheduleEndHour) 点", value: $scheduleEndHour, in: 1...24)
                 }
             }
 
@@ -123,6 +145,15 @@ struct ReminderEditorView: View {
         config.escalationDelay = escalationEnabled
             ? UIFormatters.duration(minutes: escalationMinutes)
             : nil
+        if scheduleEnabled {
+            config.activeSchedule = ActiveSchedule(
+                weekdayMask: scheduleWeekdays,
+                startMinute: scheduleStartHour * 60,
+                endMinute: scheduleEndHour * 60
+            )
+        } else {
+            config.activeSchedule = .alwaysOn
+        }
         config.snoozeDuration = UIFormatters.duration(minutes: snoozeMinutes)
         config.maxSnoozeCount = maxSnoozeCount
         config.awayPolicy = awayKind == .pause
@@ -130,6 +161,28 @@ struct ReminderEditorView: View {
             : .complete(threshold: UIFormatters.duration(minutes: awayMinutes))
         config.isEnabled = isEnabled
         return config
+    }
+
+    private func dayButton(_ iso: Int) -> some View {
+        let selected = scheduleWeekdays.contains(iso)
+        return Button {
+            if selected {
+                scheduleWeekdays.remove(iso)
+            } else {
+                scheduleWeekdays.insert(iso)
+            }
+        } label: {
+            Text(weekdayLabel(iso))
+                .font(.caption)
+                .frame(minWidth: 24, minHeight: 24)
+                .background(selected ? Color.accentColor.opacity(0.25) : Color.clear)
+                .clipShape(Circle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func weekdayLabel(_ iso: Int) -> String {
+        ["", "一", "二", "三", "四", "五", "六", "日"][iso]
     }
 
     private static func minutes(of duration: Duration?) -> Int? {
@@ -160,6 +213,10 @@ struct ReminderEditorView: View {
         case .completionLabelTooLong: return "完成按钮文案最多 8 个字符"
         case .intervalOutOfRange: return "周期需在 5 分钟～24 小时之间"
         case .escalationDelayOutOfRange: return "升级等待需在 1 分钟～24 小时之间"
+        case .scheduleStartMinuteOutOfRange: return "生效开始时间无效"
+        case .scheduleEndMinuteOutOfRange: return "生效结束时间无效"
+        case .scheduleCrossesMidnight: return "生效时段需在同一天内（结束晚于开始）"
+        case .scheduleWeekdayEmpty: return "至少选择一个生效日"
         case .snoozeDurationOutOfRange: return "延后时长需在 1 分钟～24 小时之间"
         case .snoozeCountOutOfRange: return "延后次数需在 0～10 之间"
         }

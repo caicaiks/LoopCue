@@ -53,10 +53,12 @@ final class CoreDataReminderStore: ReminderStore, @unchecked Sendable {
             )
             let configData = try JSONEncoder().encode(reminder.config)
             let cycleData = try reminder.cycle.map { try JSONEncoder().encode($0) }
+            let runtimeData = try JSONEncoder().encode(reminder.runtime)
             object.setValue(reminder.config.id, forKey: "id")
             object.setValue(reminder.config.name, forKey: "name")
             object.setValue(configData, forKey: "configData")
             object.setValue(cycleData, forKey: "cycleData")
+            object.setValue(runtimeData, forKey: "runtimeData")
             object.setValue(reminder.config.isEnabled, forKey: "isEnabled")
         }
     }
@@ -210,7 +212,13 @@ final class CoreDataReminderStore: ReminderStore, @unchecked Sendable {
         } else {
             cycle = nil
         }
-        return StoredReminder(config: config, cycle: cycle)
+        let runtime: ReminderRuntimeState
+        if let runtimeData = object.value(forKey: "runtimeData") as? Data {
+            runtime = try JSONDecoder().decode(ReminderRuntimeState.self, from: runtimeData)
+        } else {
+            runtime = ReminderRuntimeState()
+        }
+        return StoredReminder(config: config, cycle: cycle, runtime: runtime)
     }
 
     private static func defaultStoreURL() throws -> URL {
@@ -240,6 +248,7 @@ final class CoreDataReminderStore: ReminderStore, @unchecked Sendable {
             attribute("name", .stringAttributeType),
             attribute("configData", .binaryDataAttributeType),
             attribute("cycleData", .binaryDataAttributeType, optional: true),
+            attribute("runtimeData", .binaryDataAttributeType, optional: true),
             attribute("isEnabled", .booleanAttributeType),
         ]
 

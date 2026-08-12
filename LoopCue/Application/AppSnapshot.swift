@@ -11,6 +11,10 @@ struct ReminderSnapshot: Identifiable, Equatable, Sendable {
     let activeElapsed: Duration
     let escalationElapsed: Duration
     let snoozeCount: Int
+    /// 单项暂停状态（暂停到何时；nil = 未暂停）。
+    let pauseUntil: Date?
+
+    var isPaused: Bool { pauseUntil != nil }
 
     /// 距离弱提醒的剩余有效时长（仅 Counting 阶段）。
     var remainingToWeak: Duration? {
@@ -60,7 +64,11 @@ struct AppSnapshot: Equatable, Sendable {
     let pendingResponses: [PendingReminderSnapshot]
     /// 强提醒队列（只展示一个主卡片，其余等待依次处理）。
     let strongQueue: [StrongReminderSnapshot]
+    /// 全局暂停截止（nil = 未暂停；.distantFuture = 一直暂停）。
+    var globalPauseUntil: Date?
     let now: Date
+
+    var isGloballyPaused: Bool { globalPauseUntil != nil }
 
     static func make(
         from storedReminders: [StoredReminder],
@@ -74,7 +82,8 @@ struct AppSnapshot: Equatable, Sendable {
                 cycleID: stored.cycle?.id,
                 activeElapsed: stored.cycle?.activeElapsed ?? .zero,
                 escalationElapsed: stored.cycle?.escalationElapsed ?? .zero,
-                snoozeCount: stored.cycle?.snoozeCount ?? 0
+                snoozeCount: stored.cycle?.snoozeCount ?? 0,
+                pauseUntil: stored.runtime.pauseUntil
             )
         }
         let projected = Self.project(storedReminders, now: now)
@@ -83,6 +92,7 @@ struct AppSnapshot: Equatable, Sendable {
             nextReminder: projected.next,
             pendingResponses: projected.pending,
             strongQueue: projected.strong,
+            globalPauseUntil: nil,
             now: now
         )
     }

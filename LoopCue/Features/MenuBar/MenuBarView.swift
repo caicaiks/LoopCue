@@ -73,6 +73,31 @@ struct MenuBarView: View {
                 .foregroundStyle(.orange)
             }
 
+            if let snapshot = appModel.snapshot, snapshot.isGloballyPaused {
+                HStack {
+                    Image(systemName: "pause.circle.fill")
+                    Text("已全局暂停")
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button("恢复") {
+                        onSend(.resumeAll)
+                    }
+                }
+                .font(.callout)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("暂停")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    Button("30 分钟") { onSend(.pauseAll(.timed(.minutes(30)))) }
+                    Button("1 小时") { onSend(.pauseAll(.timed(.hours(1)))) }
+                    Button("到明天") { onSend(.pauseAll(.untilMidnight)) }
+                }
+                .font(.caption)
+            }
+
             Divider()
 
             Button("打开提醒列表") {

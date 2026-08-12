@@ -11,11 +11,18 @@ final class AppEnvironment {
     private let scheduler: Scheduler
     private let dispatcher: EffectDispatcher
     private let responseHandler: NotificationResponseHandler
+    private let contextMonitor: SystemContextMonitor
     private var tasks: [Task<Void, Never>] = []
 
     init() throws {
         let store = try CoreDataReminderStore()
-        let engine = ReminderEngine(store: store, timeScale: Self.debugTimeScale)
+        let contextMonitor = SystemContextMonitor()
+        let engine = ReminderEngine(
+            store: store,
+            timeScale: Self.debugTimeScale,
+            contextProvider: contextMonitor,
+            appState: UserDefaultsAppStateStore()
+        )
         let overlay = OverlayPresenter { reminderID, cycleID in
             Task {
                 do {
@@ -43,6 +50,7 @@ final class AppEnvironment {
         }
         self.store = store
         self.engine = engine
+        self.contextMonitor = contextMonitor
         self.appModel = AppModel(engine: engine)
         self.scheduler = Scheduler(engine: engine)
         self.dispatcher = EffectDispatcher(
@@ -69,6 +77,12 @@ final class AppEnvironment {
                 }
                 await self.requestNotificationAuthorization()
                 await self.refreshNotificationStatus()
+                self.contextMonitor.start { [weak self] in
+                    guard let self else { return }
+                    Task {
+                        try? await self.engine.reconcile(now: Date())
+                    }
+                }
                 await self.scheduler.start()
                 await self.drainLoop()
             } catch {

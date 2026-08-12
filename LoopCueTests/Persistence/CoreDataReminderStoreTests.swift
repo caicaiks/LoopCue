@@ -80,6 +80,46 @@ final class CoreDataReminderStoreTests: XCTestCase {
         XCTAssertTrue(try store.loadReminders().isEmpty)
     }
 
+    func testRuntimePersistenceRoundTrip() throws {
+        let store = try CoreDataReminderStore(inMemory: true)
+        let config = makeConfig()
+        let cycle = ReminderCycle(
+            reminderID: config.id,
+            policy: CyclePolicySnapshot(config: config),
+            startedAt: Date()
+        )
+        let runtime = ReminderRuntimeState(pauseUntil: Date(timeIntervalSince1970: 5_000_000))
+        try store.saveReminder(StoredReminder(config: config, cycle: cycle, runtime: runtime))
+
+        let loaded = try store.loadReminders()
+        XCTAssertEqual(loaded.count, 1)
+        XCTAssertEqual(loaded.first?.runtime, runtime)
+    }
+
+    func testRuntimeDefaultsWhenNotExplicitlySet() throws {
+        let store = try CoreDataReminderStore(inMemory: true)
+        let config = makeConfig()
+        try store.saveReminder(StoredReminder(config: config, cycle: nil))
+
+        let loaded = try store.loadReminders().first
+        XCTAssertEqual(loaded?.runtime, ReminderRuntimeState())
+        XCTAssertNil(loaded?.runtime.pauseUntil)
+    }
+
+    func testReminderConfigLegacyDecodeFallsBackToAlwaysOn() throws {
+        // 旧格式 JSON（无 activeSchedule 字段）→ 回退为 .alwaysOn，整行可正常解码。
+        let config = makeConfig(name: "旧数据")
+        let encoder = JSONEncoder()
+        let fullData = try encoder.encode(config)
+        var object = try JSONSerialization.jsonObject(with: fullData) as! [String: Any]
+        object.removeValue(forKey: "activeSchedule")
+        let legacyData = try JSONSerialization.data(withJSONObject: object)
+
+        let decoded = try JSONDecoder().decode(ReminderConfig.self, from: legacyData)
+        XCTAssertEqual(decoded.name, config.name)
+        XCTAssertEqual(decoded.activeSchedule, .alwaysOn)
+    }
+
     func testRestartRecoveryWithSQLite() throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)

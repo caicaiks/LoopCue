@@ -7,6 +7,7 @@ import Foundation
 struct CyclePolicySnapshot: Equatable, Sendable, Codable {
     let interval: Duration
     let escalationDelay: Duration?
+    let activeSchedule: ActiveSchedule
     let snoozeDuration: Duration
     let maxSnoozeCount: Int
     let awayPolicy: AwayPolicy
@@ -14,6 +15,7 @@ struct CyclePolicySnapshot: Equatable, Sendable, Codable {
     init(config: ReminderConfig) {
         self.interval = config.interval
         self.escalationDelay = config.escalationDelay
+        self.activeSchedule = config.activeSchedule
         self.snoozeDuration = config.snoozeDuration
         self.maxSnoozeCount = config.maxSnoozeCount
         self.awayPolicy = config.awayPolicy

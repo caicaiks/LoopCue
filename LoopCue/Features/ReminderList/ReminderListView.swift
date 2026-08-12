@@ -133,6 +133,28 @@ struct ReminderListView: View {
             ))
             .toggleStyle(.switch)
             .labelsHidden()
+            if reminder.isPaused {
+                Button("恢复") {
+                    appDelegate.send(.resumeReminder(reminder.id))
+                }
+            } else {
+                Menu {
+                    Button("暂停 30 分钟") {
+                        appDelegate.send(.pauseReminder(reminder.id, .timed(.minutes(30))))
+                    }
+                    Button("暂停 1 小时") {
+                        appDelegate.send(.pauseReminder(reminder.id, .timed(.hours(1))))
+                    }
+                    Button("暂停到明天") {
+                        appDelegate.send(.pauseReminder(reminder.id, .untilMidnight))
+                    }
+                    Button("一直暂停") {
+                        appDelegate.send(.pauseReminder(reminder.id, .indefinite))
+                    }
+                } label: {
+                    Image(systemName: "pause.fill")
+                }
+            }
             Button("编辑") {
                 editor = .edit(reminder)
             }
