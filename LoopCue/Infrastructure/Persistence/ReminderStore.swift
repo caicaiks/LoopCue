@@ -29,4 +29,7 @@ protocol ReminderStore: Sendable {
 
     /// 清空全部本地数据（测试 / 用户重置用）。
     func resetAll() throws
+
+    /// 只清空事件与 Outbox 效果，保留提醒配置。
+    func clearEventsAndEffects() throws
 }

@@ -49,6 +49,26 @@ actor ReminderEngine {
         publish(try currentSnapshot(now: now))
     }
 
+    /// 每次启动重新计时：保留提醒配置，重置所有轮次为全新 counting，
+    /// 并清空事件与 Outbox，避免残留效果（如旧轮覆盖窗口）再次触发。
+    /// （当前产品决策：暂不启用重启恢复；技术方案 13.1 的恢复逻辑保留在
+    /// `start(now:)` 中，后续如需恢复可切换回。）
+    func freshStart(now: Date) throws -> AppSnapshot {
+        let stored = try store.loadReminders()
+        for item in stored {
+            let cycle = ReminderCycle(
+                reminderID: item.config.id,
+                policy: CyclePolicySnapshot(config: item.config),
+                startedAt: now
+            )
+            try store.saveReminder(StoredReminder(config: item.config, cycle: cycle))
+        }
+        try store.clearEventsAndEffects()
+        let snapshot = AppSnapshot.make(from: try store.loadReminders(), now: now)
+        publish(snapshot)
+        return snapshot
+    }
+
     /// 依据持久化时间点推进有效时长（技术方案 8）。
     func reconcile(now: Date) throws {
         let stored = try store.loadReminders()

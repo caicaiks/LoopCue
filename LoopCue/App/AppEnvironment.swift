@@ -58,7 +58,8 @@ final class AppEnvironment {
         tasks.append(Task { [weak self] in
             guard let self else { return }
             do {
-                let snapshot = try await self.engine.start(now: Date())
+                // 每次启动重新计时，而非恢复上一轮状态。
+                let snapshot = try await self.engine.freshStart(now: Date())
                 self.appModel.set(snapshot)
                 if snapshot.reminders.isEmpty {
                     try await self.engine.handle(

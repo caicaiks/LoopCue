@@ -138,4 +138,19 @@ final class ReminderEngineTests: XCTestCase {
         XCTAssertEqual(snapshot.reminders.first?.phase, .weakPending)
         XCTAssertEqual(snapshot.reminders.first?.config.name, "重启恢复")
     }
+
+    func testFreshStartResetsTimingOnLaunch() async throws {
+        let store = try CoreDataReminderStore(inMemory: true)
+        let engine = ReminderEngine(store: store)
+        let config = makeConfig()
+        try await engine.handle(.create(config), now: t0)
+        try await engine.reconcile(now: t0.addingTimeInterval(300))
+
+        let snapshot = try await engine.freshStart(now: t0.addingTimeInterval(400))
+        XCTAssertEqual(snapshot.reminders.first?.phase, .counting)
+        XCTAssertEqual(snapshot.reminders.first?.activeElapsed, .zero)
+        XCTAssertEqual(snapshot.reminders.first?.config.name, config.name)
+        XCTAssertTrue(try store.loadEvents(reminderID: config.id).isEmpty)
+        XCTAssertTrue(try store.loadPendingEffects().isEmpty)
+    }
 }
