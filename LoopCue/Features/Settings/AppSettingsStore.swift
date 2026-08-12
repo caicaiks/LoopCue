@@ -17,6 +17,11 @@ final class AppSettingsStore: ObservableObject {
         didSet { defaults.set(defaultAwayMinutes, forKey: Self.awayMinutesKey) }
     }
 
+    /// 是否已完成首次启动引导（PRD 6.1 / 16.2：删除全部数据后重新进入引导）。
+    @Published var hasCompletedOnboarding: Bool {
+        didSet { defaults.set(hasCompletedOnboarding, forKey: Self.onboardingKey) }
+    }
+
     /// 新建提醒的默认离开策略。
     var defaultAwayPolicy: AwayPolicy {
         .pause(threshold: .minutes(Int64(defaultAwayMinutes)))
@@ -24,6 +29,7 @@ final class AppSettingsStore: ObservableObject {
 
     private static let displayScopeKey = "loopcue.settings.defaultDisplayScope"
     private static let awayMinutesKey = "loopcue.settings.defaultAwayMinutes"
+    private static let onboardingKey = "loopcue.settings.hasCompletedOnboarding"
     private let defaults: UserDefaults
 
     init(defaults: UserDefaults = .standard) {
@@ -39,6 +45,7 @@ final class AppSettingsStore: ObservableObject {
         } else {
             defaultAwayMinutes = 5
         }
+        hasCompletedOnboarding = defaults.object(forKey: Self.onboardingKey) as? Bool ?? false
     }
 
     private static func sanitize(_ minutes: Int) -> Int {

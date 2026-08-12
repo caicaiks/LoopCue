@@ -31,9 +31,22 @@ struct MenuBarView: View {
                                 Image(systemName: next.icon.rawValue)
                                 Text(next.name)
                                 Spacer()
-                                Text(UIFormatters.remaining(next.remainingToWeak))
+                                TimelineView(.periodic(from: .now, by: 1)) { context in
+                                    Text(UIFormatters.countdown(
+                                        next.remainingToWeak,
+                                        since: snapshot.now,
+                                        now: context.date
+                                    ))
+                                }
                             }
                             .font(.callout)
+                            Button("立即提醒一次") {
+                                onSend(.triggerWeakNow(
+                                    reminderID: next.reminderID,
+                                    cycleID: next.cycleID
+                                ))
+                            }
+                            .font(.caption)
                         }
                         Divider()
                     }
@@ -44,7 +57,9 @@ struct MenuBarView: View {
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                             ForEach(snapshot.pendingResponses, id: \.cycleID) { pending in
-                                pendingRow(pending)
+                                TimelineView(.periodic(from: .now, by: 1)) { context in
+                                    pendingRow(pending, since: snapshot.now, now: context.date)
+                                }
                             }
                         }
                         Divider()
@@ -134,13 +149,17 @@ struct MenuBarView: View {
         .frame(minWidth: 300)
     }
 
-    private func pendingRow(_ pending: PendingReminderSnapshot) -> some View {
+    private func pendingRow(
+        _ pending: PendingReminderSnapshot,
+        since snapshotNow: Date,
+        now: Date
+    ) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Image(systemName: pending.icon.rawValue)
                 Text(pending.name)
                 Spacer()
-                Text(pendingLabel(pending))
+                Text(pendingLabel(pending, since: snapshotNow, now: now))
                     .foregroundStyle(.secondary)
             }
             HStack(spacing: 8) {
@@ -162,21 +181,25 @@ struct MenuBarView: View {
         .font(.callout)
     }
 
-    private func pendingLabel(_ pending: PendingReminderSnapshot) -> String {
+    private func pendingLabel(
+        _ pending: PendingReminderSnapshot,
+        since snapshotNow: Date,
+        now: Date
+    ) -> String {
         switch pending.phase {
         case .weakPending:
             if let remaining = pending.remainingToStrong {
-                return "等待回应 · \(UIFormatters.remaining(remaining)) 后升级"
+                return "等待回应 · \(UIFormatters.countdown(remaining, since: snapshotNow, now: now)) 后升级"
             }
             return "等待回应"
         case .snoozed:
             if let remaining = pending.remainingToStrong {
-                return "已延后 · \(UIFormatters.remaining(remaining)) 后提醒"
+                return "已延后 · \(UIFormatters.countdown(remaining, since: snapshotNow, now: now)) 后提醒"
             }
             return "已延后"
         case .strongPending:
             if let remaining = pending.remainingToStrong, remaining > .zero {
-                return "已暂时关闭 · \(UIFormatters.remaining(remaining)) 后再次提醒"
+                return "已暂时关闭 · \(UIFormatters.countdown(remaining, since: snapshotNow, now: now)) 后再次提醒"
             }
             return "等待升级"
         case .counting:

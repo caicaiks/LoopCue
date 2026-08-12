@@ -108,13 +108,8 @@ final class AppEnvironment {
                 // 每次启动重新计时，而非恢复上一轮状态。
                 let snapshot = try await self.engine.freshStart(now: Date())
                 self.appModel.set(snapshot)
-                if snapshot.reminders.isEmpty {
-                    try await self.engine.handle(
-                        .create(ReminderTemplate.standUp.makeConfig()),
-                        now: Date()
-                    )
-                }
-                await self.requestNotificationAuthorization()
+                // 首次引导（Onboarding）负责创建第一个提醒与申请通知权限，
+                // 不再在启动时自动建模板或抢占权限（PRD 6.1 / 技术方案 10.1）。
                 await self.refreshNotificationStatus()
                 self.contextMonitor.start { [weak self] in
                     guard let self else { return }
@@ -151,7 +146,8 @@ final class AppEnvironment {
         }
     }
 
-    private func requestNotificationAuthorization() async {
+    /// 按需请求通知权限（Onboarding 创建首个提醒后调用，技术方案 10.1）。
+    func requestNotificationAuthorization() async {
         do {
             let granted = try await UNUserNotificationCenter.current()
                 .requestAuthorization(options: [.alert, .sound])

@@ -208,6 +208,33 @@ final class ReminderEngineContextTests: XCTestCase {
         XCTAssertTrue(try store.loadEvents(reminderID: config.id).isEmpty)
     }
 
+    func testGatedReconcileSkipsCheckpointAndCountsCorrectlyAfterReturn() async throws {
+        let store = try CoreDataReminderStore(inMemory: true)
+        let context = FakeContextProvider()
+        let engine = makeEngine(store: store, context: context, appState: InMemoryAppStateStore())
+        let config = makeConfig(awayPolicy: .pause(threshold: .minutes(5)))
+        try await engine.handle(.create(config), now: t0)
+        let createdCheckpoint = try XCTUnwrap(
+            store.loadReminders().first?.cycle?.lastCheckpointAt
+        )
+
+        // 9:00 起即无输入并持续到 9:30：整个窗口都在离开阈值之后，
+        // 有效时长 0，且不写 checkpoint（避免空闲期每秒落盘）。
+        context.context.lastInputAt = t0.addingTimeInterval(-30 * 60)
+        context.context.idleDuration = .minutes(60)
+        try await engine.reconcile(now: t0.addingTimeInterval(30 * 60))
+
+        let gated = try XCTUnwrap(store.loadReminders().first)
+        XCTAssertEqual(gated.cycle?.activeElapsed, .zero)
+        XCTAssertEqual(gated.cycle?.lastCheckpointAt, createdCheckpoint)
+
+        // 9:40 回归：从回归时刻重起算，9:40→9:45 累计 5 分钟。
+        context.context.lastInputAt = t0.addingTimeInterval(40 * 60)
+        context.context.idleDuration = .zero
+        try await engine.reconcile(now: t0.addingTimeInterval(45 * 60))
+        XCTAssertEqual(activeElapsed(store, config.id), .minutes(5))
+    }
+
     // MARK: - 睡眠 / 锁屏
 
     func testSleepWakeDoesNotCountSleepPeriod() async throws {

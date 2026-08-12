@@ -54,6 +54,35 @@ final class AppSnapshotTests: XCTestCase {
         XCTAssertEqual(projection.next?.remainingToWeak, .minutes(10))
     }
 
+    func testNextProjectionCarriesCycleID() {
+        let config = makeConfig(name: "A", interval: .minutes(30))
+        let cycle = makeCycle(config: config)
+        let projection = AppSnapshot.project(
+            [StoredReminder(config: config, cycle: cycle)],
+            now: now
+        )
+        XCTAssertEqual(projection.next?.cycleID, cycle.id)
+    }
+
+    func testRemainingToWeakUsesCyclePolicyNotCurrentConfig() {
+        // 模拟「编辑下一轮生效」：配置周期已改为 5 分钟，但本轮策略快照仍是 10 分钟。
+        let edited = makeConfig(name: "编辑后", interval: .minutes(5))
+        let policyConfig = makeConfig(name: "编辑前", interval: .minutes(10))
+        var cycle = ReminderCycle(
+            reminderID: edited.id,
+            policy: CyclePolicySnapshot(config: policyConfig),
+            startedAt: now
+        )
+        cycle = ReminderReducer.advance(cycle, by: .minutes(2), now: now).cycle
+
+        let snapshot = AppSnapshot.make(
+            from: [StoredReminder(config: edited, cycle: cycle)],
+            now: now
+        )
+        // 按策略快照：10 - 2 = 8 分钟；若误用 config.interval 会得到 3 分钟。
+        XCTAssertEqual(snapshot.reminders.first?.remainingToWeak, .minutes(8))
+    }
+
     func testNextReminderNilWhenAllWaitingOrNone() {
         let weak = makeConfig(name: "等待", interval: .minutes(5), escalationDelay: .minutes(2))
         let weakCycle = advance(weak, by: .minutes(5))

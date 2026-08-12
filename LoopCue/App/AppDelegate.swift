@@ -1,6 +1,8 @@
 import AppKit
+import Combine
 import Foundation
 import os
+import SwiftUI
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
@@ -8,9 +10,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     @Published private(set) var launchError: String?
     @Published private(set) var isLoginItemEnabled = false
     @Published private(set) var loginItemNeedsApproval = false
+    /// 需要展示首次启动引导（提醒为空且未完成过引导）。
+    @Published private(set) var needsOnboarding = false
     let settings = AppSettingsStore()
     private var environment: AppEnvironment?
     private let loginItem = LoginItemManager()
+    private var cancellables: Set<AnyCancellable> = []
+    private var onboardingWindow: NSWindow?
+    /// 引导会话进行中：创建首个提醒后快照不再为空，但流程尚未结束，
+    /// 不能据此关闭引导窗口。
+    private var onboardingSessionActive = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard Self.ensureSingleInstance() else { return }
@@ -19,6 +28,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             let environment = try AppEnvironment()
             self.environment = environment
             self.appModel = environment.appModel
+            observeOnboardingState()
             environment.start()
         } catch {
             self.launchError = "\(error)"
@@ -42,7 +52,71 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         Task {
             try? await environment?.engine.clearAll(now: Date())
             NotificationCleanup.removeAll()
+            // 删除全部数据后重新进入 onboarding（PRD 16.2）。
+            settings.hasCompletedOnboarding = false
         }
+    }
+
+    /// Onboarding 完成时调用：关闭引导窗口。
+    @MainActor
+    func dismissOnboarding() {
+        onboardingWindow?.orderOut(nil)
+        onboardingWindow = nil
+        refreshOnboarding()
+    }
+
+    /// 按需申请通知权限（Onboarding 权限步骤，PRD 10.2）。
+    @MainActor
+    func requestNotificationAuthorization() {
+        Task {
+            await environment?.requestNotificationAuthorization()
+            refreshNotificationStatus()
+        }
+    }
+
+    /// 通知权限状态变化后由 AppModel 快照驱动：提醒为空且未完成引导时展示。
+    private func observeOnboardingState() {
+        guard let appModel else { return }
+        appModel.$snapshot
+            .sink { [weak self] snapshot in
+                guard let snapshot else { return } // 初始 nil 不发窗口
+                guard !(self?.onboardingSessionActive ?? false) else { return }
+                self?.refreshOnboarding(remindersEmpty: snapshot.reminders.isEmpty)
+            }
+            .store(in: &cancellables)
+    }
+
+    private func refreshOnboarding(remindersEmpty: Bool? = nil) {
+        let empty = remindersEmpty ?? (appModel?.snapshot?.reminders.isEmpty ?? true)
+        needsOnboarding = empty && !settings.hasCompletedOnboarding
+        if needsOnboarding {
+            presentOnboarding()
+        } else {
+            onboardingWindow?.orderOut(nil)
+            onboardingWindow = nil
+            onboardingSessionActive = false
+        }
+    }
+
+    /// 以 AppKit 窗口承载 SwiftUI OnboardingView（菜单栏应用无常驻 Scene，
+    /// 直接管理窗口最可靠，与 OverlayPresenter 的 NSPanel 思路一致）。
+    private func presentOnboarding() {
+        guard onboardingWindow == nil else {
+            onboardingWindow?.makeKeyAndOrderFront(nil)
+            return
+        }
+        onboardingSessionActive = true
+        let hosting = NSHostingController(
+            rootView: OnboardingView(appDelegate: self)
+        )
+        let window = NSWindow(contentViewController: hosting)
+        window.title = "欢迎使用叮刻"
+        window.styleMask = [.titled, .closable]
+        window.isReleasedWhenClosed = false
+        window.center()
+        onboardingWindow = window
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
     }
 
     /// 刷新登录启动状态（启动与每次切换后调用）。

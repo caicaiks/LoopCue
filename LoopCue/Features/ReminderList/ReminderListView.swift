@@ -43,7 +43,7 @@ struct ReminderListView: View {
                 } else {
                     List {
                         ForEach(snapshot.reminders) { reminder in
-                            row(reminder)
+                            row(reminder, snapshotNow: snapshot.now)
                         }
                     }
                     .listStyle(.inset)
@@ -122,15 +122,17 @@ struct ReminderListView: View {
         }
     }
 
-    private func row(_ reminder: ReminderSnapshot) -> some View {
+    private func row(_ reminder: ReminderSnapshot, snapshotNow: Date) -> some View {
         HStack(spacing: 10) {
             Image(systemName: reminder.config.icon.rawValue)
                 .frame(width: 20)
             VStack(alignment: .leading, spacing: 2) {
                 Text(reminder.config.name)
-                Text(statusText(reminder))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                TimelineView(.periodic(from: .now, by: 1)) { context in
+                    Text(statusText(reminder, since: snapshotNow, now: context.date))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
             Spacer()
             Toggle("", isOn: Binding(
@@ -173,16 +175,20 @@ struct ReminderListView: View {
         .padding(.vertical, 2)
     }
 
-    private func statusText(_ reminder: ReminderSnapshot) -> String {
+    private func statusText(
+        _ reminder: ReminderSnapshot,
+        since snapshotNow: Date,
+        now: Date
+    ) -> String {
         switch reminder.phase {
         case .counting:
             if let remaining = reminder.remainingToWeak {
-                return "计时中 · \(UIFormatters.remaining(remaining)) 后弱提醒"
+                return "计时中 · \(UIFormatters.countdown(remaining, since: snapshotNow, now: now)) 后弱提醒"
             }
             return "计时中"
         case .weakPending:
             if let remaining = escalationRemaining(of: reminder) {
-                return "等待回应 · \(UIFormatters.remaining(remaining)) 后升级"
+                return "等待回应 · \(UIFormatters.countdown(remaining, since: snapshotNow, now: now)) 后升级"
             }
             return "等待回应"
         case .snoozed:
@@ -195,8 +201,8 @@ struct ReminderListView: View {
     }
 
     private func escalationRemaining(of reminder: ReminderSnapshot) -> Duration? {
-        guard let config = reminder.config.escalationDelay else { return nil }
-        return max(.zero, config - reminder.escalationElapsed)
+        guard let delay = reminder.escalationDelay else { return nil }
+        return max(.zero, delay - reminder.escalationElapsed)
     }
 
     private func applyEdit(_ mode: ApplyMode) {

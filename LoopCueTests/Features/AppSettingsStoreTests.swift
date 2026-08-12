@@ -42,4 +42,13 @@ final class AppSettingsStoreTests: XCTestCase {
         let store = AppSettingsStore(defaults: defaults)
         XCTAssertEqual(store.defaultAwayMinutes, 5)
     }
+
+    func testOnboardingFlagDefaultsFalseAndPersists() {
+        let store = AppSettingsStore(defaults: defaults)
+        XCTAssertFalse(store.hasCompletedOnboarding)
+
+        store.hasCompletedOnboarding = true
+        let reloaded = AppSettingsStore(defaults: defaults)
+        XCTAssertTrue(reloaded.hasCompletedOnboarding)
+    }
 }

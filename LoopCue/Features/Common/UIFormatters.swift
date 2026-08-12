@@ -14,6 +14,18 @@ enum UIFormatters {
         return "\(totalSeconds) 秒"
     }
 
+    /// 快照发布后的实时倒计时展示：每秒由 UI 重算，不触发写库
+    /// （技术方案 18：UI 倒计时独立 1 秒展示）。
+    static func countdown(
+        _ remaining: Duration,
+        since snapshotNow: Date,
+        now: Date
+    ) -> String {
+        let elapsed = Int64(now.timeIntervalSince(snapshotNow))
+        let total = max(0, remaining.components.seconds - elapsed)
+        return Self.remaining(.seconds(total))
+    }
+
     /// 把分钟数转成 Duration。
     static func duration(minutes: Int) -> Duration {
         .seconds(Int64(minutes) * 60)

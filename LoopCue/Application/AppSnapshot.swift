@@ -13,19 +13,24 @@ struct ReminderSnapshot: Identifiable, Equatable, Sendable {
     let snoozeCount: Int
     /// 单项暂停状态（暂停到何时；nil = 未暂停）。
     let pauseUntil: Date?
+    /// 当前轮策略快照中的周期（编辑「下一轮生效」不影响本轮）。
+    let interval: Duration
+    /// 当前轮策略快照中的升级等待；nil = 未开启升级。
+    let escalationDelay: Duration?
 
     var isPaused: Bool { pauseUntil != nil }
 
     /// 距离弱提醒的剩余有效时长（仅 Counting 阶段）。
     var remainingToWeak: Duration? {
         guard phase == .counting else { return nil }
-        return max(.zero, config.interval - activeElapsed)
+        return max(.zero, interval - activeElapsed)
     }
 }
 
 /// 菜单栏「下一个提醒」投影：剩余时间最近的 Counting 提醒。
 struct NextReminderProjection: Equatable, Sendable {
     let reminderID: UUID
+    let cycleID: UUID
     let name: String
     let icon: ReminderIcon
     let remainingToWeak: Duration
@@ -90,7 +95,9 @@ struct AppSnapshot: Equatable, Sendable {
                 activeElapsed: stored.cycle?.activeElapsed ?? .zero,
                 escalationElapsed: stored.cycle?.escalationElapsed ?? .zero,
                 snoozeCount: stored.cycle?.snoozeCount ?? 0,
-                pauseUntil: stored.runtime.pauseUntil
+                pauseUntil: stored.runtime.pauseUntil,
+                interval: stored.cycle?.policy.interval ?? stored.config.interval,
+                escalationDelay: stored.cycle?.policy.escalationDelay
             )
         }
         let projected = Self.project(storedReminders, now: now)
@@ -128,6 +135,7 @@ struct AppSnapshot: Equatable, Sendable {
                 if next == nil || remaining < next!.remainingToWeak {
                     next = NextReminderProjection(
                         reminderID: config.id,
+                        cycleID: cycle.id,
                         name: config.name,
                         icon: config.icon,
                         remainingToWeak: remaining

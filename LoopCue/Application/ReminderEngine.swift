@@ -196,14 +196,10 @@ actor ReminderEngine {
                     runtime: runtime,
                     now: now
                 )
-            } else {
-                try checkpoint(
-                    cycle: working,
-                    for: item.config,
-                    runtime: runtime,
-                    now: now
-                )
             }
+            // 未发生状态变化（门控期间无有效时长）时跳过 checkpoint：
+            // 合并窗口计算的有效时长等价于逐窗口之和，且能显著减少
+            // 空闲期的 Core Data 写入（技术方案 18 能耗预算）。
 
             // 6) 记录本次离开状态，供下次结算判断「离开后回归」。
             wasAwayByReminder[item.config.id] = nowAway
@@ -545,20 +541,7 @@ actor ReminderEngine {
         return now.timeIntervalSince(lastInputAt) >= TimeInterval(thresholdSeconds)
     }
 
-    private func checkpoint(
-        cycle: ReminderCycle,
-        for config: ReminderConfig,
-        runtime: ReminderRuntimeState,
-        now: Date
-    ) throws {
-        var updated = cycle
-        updated.lastCheckpointAt = now
-        try store.saveReminder(
-            StoredReminder(config: config, cycle: updated, runtime: runtime)
-        )
-    }
-
-    private func currentSnapshot(now: Date) throws -> AppSnapshot {
+    func currentSnapshot(now: Date) throws -> AppSnapshot {
         var snapshot = AppSnapshot.make(from: try store.loadReminders(), now: now)
         snapshot.globalPauseUntil = globalPauseUntil
         return snapshot
