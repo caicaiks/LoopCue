@@ -74,6 +74,33 @@ final class CoreDataReminderStore: ReminderStore, @unchecked Sendable {
         }
     }
 
+    func deleteReminderCascade(id: UUID) throws {
+        try perform { context in
+            // 1) 提醒本体（含当前 Cycle 快照）。
+            let reminderRequest = NSFetchRequest<NSManagedObject>(entityName: "ManagedReminder")
+            reminderRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+            for object in try context.fetch(reminderRequest) {
+                context.delete(object)
+            }
+
+            // 2) 事件。
+            let eventRequest = NSFetchRequest<NSManagedObject>(entityName: "ManagedEvent")
+            eventRequest.predicate = NSPredicate(format: "reminderID == %@", id as CVarArg)
+            for object in try context.fetch(eventRequest) {
+                context.delete(object)
+            }
+
+            // 3) 属于该提醒的 Outbox 效果（解码匹配 reminderID）。
+            let effectRequest = NSFetchRequest<NSManagedObject>(entityName: "ManagedEffect")
+            for object in try context.fetch(effectRequest) {
+                guard let effect = try? Self.decodeEffect(object),
+                      Self.reminderID(of: effect) == id
+                else { continue }
+                context.delete(object)
+            }
+        }
+    }
+
     func appendEvent(_ event: ReminderEvent) throws {
         try perform { context in
             let object = NSEntityDescription.insertNewObject(
@@ -146,13 +173,13 @@ final class CoreDataReminderStore: ReminderStore, @unchecked Sendable {
             return try objects.map { object -> StoredEffect in
                 guard
                     let id = object.value(forKey: "id") as? UUID,
-                    let data = object.value(forKey: "effectData") as? Data,
+                    object.value(forKey: "effectData") is Data,
                     let dedupeKey = object.value(forKey: "dedupeKey") as? String,
                     let isDone = object.value(forKey: "isDone") as? Bool
                 else {
                     throw PersistenceError.corruptRow
                 }
-                let effect = try JSONDecoder().decode(ReminderEffect.self, from: data)
+                let effect = try Self.decodeEffect(object)
                 return StoredEffect(id: id, effect: effect, dedupeKey: dedupeKey, isDone: isDone)
             }
         }
@@ -219,6 +246,23 @@ final class CoreDataReminderStore: ReminderStore, @unchecked Sendable {
             runtime = ReminderRuntimeState()
         }
         return StoredReminder(config: config, cycle: cycle, runtime: runtime)
+    }
+
+    private static func decodeEffect(_ object: NSManagedObject) throws -> ReminderEffect {
+        guard let data = object.value(forKey: "effectData") as? Data else {
+            throw PersistenceError.corruptRow
+        }
+        return try JSONDecoder().decode(ReminderEffect.self, from: data)
+    }
+
+    private static func reminderID(of effect: ReminderEffect) -> UUID? {
+        switch effect {
+        case .sendWeakNotification(let reminderID, _, _),
+             .clearNotifications(let reminderID, _),
+             .presentStrongOverlay(let reminderID, _),
+             .dismissStrongOverlay(let reminderID, _):
+            return reminderID
+        }
     }
 
     private static func defaultStoreURL() throws -> URL {

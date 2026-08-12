@@ -38,7 +38,11 @@ enum ReminderReducer {
                     cycle.phase = .weakPending
                     cycle.weakTriggeredAt = now
                     events.append(.init(reminderID: cycle.reminderID, cycleID: cycle.id, type: .weakTriggered, occurredAt: now))
-                    effects.append(.sendWeakNotification(reminderID: cycle.reminderID, cycleID: cycle.id))
+                    effects.append(.sendWeakNotification(
+                        reminderID: cycle.reminderID,
+                        cycleID: cycle.id,
+                        content: NotificationContent()
+                    ))
                 }
 
             case .weakPending:
@@ -67,7 +71,11 @@ enum ReminderReducer {
                     cycle.phase = .weakPending
                     cycle.weakTriggeredAt = now
                     events.append(.init(reminderID: cycle.reminderID, cycleID: cycle.id, type: .weakRepeated, occurredAt: now))
-                    effects.append(.sendWeakNotification(reminderID: cycle.reminderID, cycleID: cycle.id))
+                    effects.append(.sendWeakNotification(
+                        reminderID: cycle.reminderID,
+                        cycleID: cycle.id,
+                        content: NotificationContent()
+                    ))
                 }
 
             case .strongPending:
@@ -153,7 +161,11 @@ enum ReminderReducer {
             return Reduction(
                 cycle: cycle,
                 events: [.init(reminderID: reminderID, cycleID: cycleID, type: .weakTriggered, occurredAt: now)],
-                effects: [.sendWeakNotification(reminderID: reminderID, cycleID: cycleID)]
+                effects: [.sendWeakNotification(
+                    reminderID: reminderID,
+                    cycleID: cycleID,
+                    content: NotificationContent()
+                )]
             )
 
         case .dismissOverlay(let reminderID, let cycleID):
@@ -201,7 +213,11 @@ enum ReminderReducer {
                 events.append(
                     .init(reminderID: cycle.reminderID, cycleID: cycle.id, type: .weakTriggered, occurredAt: now)
                 )
-                effects.append(.sendWeakNotification(reminderID: cycle.reminderID, cycleID: cycle.id))
+                effects.append(.sendWeakNotification(
+                    reminderID: cycle.reminderID,
+                    cycleID: cycle.id,
+                    content: NotificationContent()
+                ))
                 didChange = true
 
             case .weakPending:

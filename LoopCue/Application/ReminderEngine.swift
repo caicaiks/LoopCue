@@ -226,7 +226,7 @@ actor ReminderEngine {
         case .create(let config):
             try create(config, now: now)
         case .delete(let id):
-            try store.deleteReminder(id: id)
+            try delete(id: id)
         case .setEnabled(let id, let isEnabled):
             try setEnabled(id: id, isEnabled: isEnabled, now: now)
         case .complete, .snooze, .skip, .triggerWeakNow, .dismissOverlay:
@@ -257,6 +257,28 @@ actor ReminderEngine {
             startedAt: now
         )
         try store.saveReminder(StoredReminder(config: config, cycle: cycle))
+    }
+
+    /// 删除提醒：在同一事务内级联删除事件与 Outbox 效果，并补发
+    /// 「清除通知 + 关闭覆盖窗口」清理效果（技术方案 9.2）。
+    private func delete(id: UUID) throws {
+        guard let item = try store.loadReminders().first(where: { $0.config.id == id }) else {
+            return
+        }
+        let cycleID = item.cycle?.id
+        try store.deleteReminderCascade(id: id)
+        guard let cycleID else { return }
+        for effect in [
+            ReminderEffect.clearNotifications(reminderID: id, cycleID: cycleID),
+            ReminderEffect.dismissStrongOverlay(reminderID: id, cycleID: cycleID),
+        ] {
+            try store.appendEffect(StoredEffect(
+                id: UUID(),
+                effect: effect,
+                dedupeKey: Self.dedupeKey(for: effect),
+                isDone: false
+            ))
+        }
     }
 
     private func setEnabled(id: UUID, isEnabled: Bool, now: Date) throws {
@@ -366,12 +388,28 @@ actor ReminderEngine {
         for effect in reduction.effects {
             let stored = StoredEffect(
                 id: UUID(),
-                effect: effect,
+                effect: Self.enrich(effect, with: config),
                 dedupeKey: Self.dedupeKey(for: effect),
                 isDone: false
             )
             try store.appendEffect(stored)
         }
+    }
+
+    /// 落盘前把「发送弱提醒」效果补全为自包含的通知内容。
+    /// 领域层只表达语义（reminderID/cycleID），展示文案来自当时配置。
+    private static func enrich(
+        _ effect: ReminderEffect,
+        with config: ReminderConfig
+    ) -> ReminderEffect {
+        guard case .sendWeakNotification(let reminderID, let cycleID, _) = effect else {
+            return effect
+        }
+        return .sendWeakNotification(
+            reminderID: reminderID,
+            cycleID: cycleID,
+            content: NotificationContent(config: config)
+        )
     }
 
     // MARK: - 暂停
@@ -532,10 +570,10 @@ actor ReminderEngine {
 
     private static func dedupeKey(for effect: ReminderEffect) -> String {
         switch effect {
-        case .sendWeakNotification(_, let cycleID): return "weak:\(cycleID)"
-        case .clearNotifications(_, let cycleID): return "clear:\(cycleID)"
-        case .presentStrongOverlay(_, let cycleID): return "strong:\(cycleID)"
-        case .dismissStrongOverlay(_, let cycleID): return "dismiss:\(cycleID)"
+        case .sendWeakNotification(_, let cycleID, _): return "weak:\(cycleID)"
+            case .clearNotifications(_, let cycleID): return "clear:\(cycleID)"
+            case .presentStrongOverlay(_, let cycleID): return "strong:\(cycleID)"
+            case .dismissStrongOverlay(_, let cycleID): return "dismiss:\(cycleID)"
         }
     }
 }

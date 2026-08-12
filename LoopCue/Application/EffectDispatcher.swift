@@ -16,9 +16,8 @@ actor EffectDispatcher {
     func drain() async throws {
         let pending = try store.loadPendingEffects()
         for stored in pending where !stored.isDone {
-            await executor.execute(stored.effect)
+            await executor.execute(stored.effect, effectID: stored.id)
             try store.markEffectDone(id: stored.id)
         }
     }
 }
-

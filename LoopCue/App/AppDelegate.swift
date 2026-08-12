@@ -8,6 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     @Published private(set) var launchError: String?
     @Published private(set) var isLoginItemEnabled = false
     @Published private(set) var loginItemNeedsApproval = false
+    let settings = AppSettingsStore()
     private var environment: AppEnvironment?
     private let loginItem = LoginItemManager()
 
@@ -32,6 +33,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     @MainActor
     func resetForTesting() {
         environment?.resetForTesting()
+    }
+
+    /// 删除所有本地数据（设置页，二次确认后调用）。
+    /// 清空业务数据后移除全部通知，回到全新状态（onboarding 待 Step 3）。
+    @MainActor
+    func deleteAllLocalData() {
+        Task {
+            try? await environment?.engine.clearAll(now: Date())
+            NotificationCleanup.removeAll()
+        }
     }
 
     /// 刷新登录启动状态（启动与每次切换后调用）。

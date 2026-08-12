@@ -67,7 +67,13 @@ struct ReminderListView: View {
         .sheet(item: $editor) { target in
             switch target {
             case .create:
-                ReminderEditorView(draft: nil) { config in
+                ReminderEditorView(
+                    draft: nil,
+                    defaults: EditorDefaults(
+                        displayScope: appDelegate.settings.defaultDisplayScope,
+                        awayPolicy: appDelegate.settings.defaultAwayPolicy
+                    )
+                ) { config in
                     appDelegate.send(.create(config))
                     editor = nil
                 }

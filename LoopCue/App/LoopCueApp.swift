@@ -14,6 +14,13 @@ struct LoopCueApp: App {
         Window("提醒列表", id: "reminderList") {
             ReminderListView(appDelegate: appDelegate)
         }
+
+        Window("设置", id: "settings") {
+            SettingsView(
+                appDelegate: appDelegate,
+                settings: appDelegate.settings
+            )
+        }
     }
 }
 
@@ -35,7 +42,13 @@ private struct MenuBarContent: View {
                             openWindow(id: "reminderList")
                         }
                     },
-                    onReset: { appDelegate.resetForTesting() },
+                    onOpenSettings: {
+                        // 与提醒列表一致：accessory 应用需先激活自身。
+                        NSApp.activate(ignoringOtherApps: true)
+                        DispatchQueue.main.async {
+                            openWindow(id: "settings")
+                        }
+                    },
                     isLoginItemEnabled: appDelegate.isLoginItemEnabled,
                     loginItemNeedsApproval: appDelegate.loginItemNeedsApproval,
                     onToggleLoginItem: { appDelegate.setLoginItemEnabled($0) }

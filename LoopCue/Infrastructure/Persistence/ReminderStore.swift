@@ -30,6 +30,8 @@ protocol ReminderStore: Sendable {
     func loadReminders() throws -> [StoredReminder]
     func saveReminder(_ reminder: StoredReminder) throws
     func deleteReminder(id: UUID) throws
+    /// 删除提醒及其全部事件、Outbox 效果（同一事务，技术方案 9.2）。
+    func deleteReminderCascade(id: UUID) throws
 
     func appendEvent(_ event: ReminderEvent) throws
     func loadEvents(reminderID: UUID) throws -> [ReminderEvent]

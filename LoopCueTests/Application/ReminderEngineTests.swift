@@ -95,6 +95,75 @@ final class ReminderEngineTests: XCTestCase {
         XCTAssertEqual(events.map(\.type), [.weakTriggered, .completed])
     }
 
+    func testWeakNotificationEffectCarriesConfigContent() async throws {
+        let store = try CoreDataReminderStore(inMemory: true)
+        let engine = ReminderEngine(store: store)
+        var config = makeConfig(name: "喝水")
+        config.message = "喝几口水，让自己缓一缓。"
+        config.completionLabel = "已喝水"
+        config.snoozeDuration = .minutes(15)
+        try await engine.handle(.create(config), now: t0)
+
+        try await engine.reconcile(now: t0.addingTimeInterval(5 * 60))
+
+        let pending = try store.loadPendingEffects()
+        let contents = pending.compactMap { stored -> NotificationContent? in
+            guard case .sendWeakNotification(_, _, let content) = stored.effect else { return nil }
+            return content
+        }
+        let content = try XCTUnwrap(contents.first)
+        XCTAssertEqual(content.name, "喝水")
+        XCTAssertEqual(content.message, "喝几口水，让自己缓一缓。")
+        XCTAssertEqual(content.completionLabel, "已喝水")
+        XCTAssertEqual(content.snoozeMinutes, 15)
+    }
+
+    func testDeleteCascadesRowsAndQueuesCleanupEffects() async throws {
+        let store = try CoreDataReminderStore(inMemory: true)
+        let engine = ReminderEngine(store: store)
+        let config = makeConfig()
+        try await engine.handle(.create(config), now: t0)
+        try await engine.reconcile(now: t0.addingTimeInterval(5 * 60))
+
+        let snapshot = try await engine.start(now: t0.addingTimeInterval(5 * 60))
+        let cycleID = try XCTUnwrap(snapshot.reminders.first?.cycleID)
+        XCTAssertFalse(try store.loadEvents(reminderID: config.id).isEmpty)
+        XCTAssertTrue(try store.loadPendingEffects().contains { stored in
+            if case .sendWeakNotification = stored.effect { return true }
+            return false
+        })
+
+        try await engine.handle(.delete(config.id), now: t0.addingTimeInterval(5 * 60))
+
+        XCTAssertTrue(try store.loadReminders().isEmpty)
+        XCTAssertTrue(try store.loadEvents(reminderID: config.id).isEmpty)
+
+        let pending = try store.loadPendingEffects()
+        // 旧轮次的弱通知效果已被级联删除。
+        XCTAssertFalse(pending.contains { stored in
+            if case .sendWeakNotification = stored.effect { return true }
+            return false
+        })
+        // 补发清理效果：清除通知 + 关闭覆盖窗口（技术方案 9.2）。
+        XCTAssertTrue(pending.contains { stored in
+            guard case .clearNotifications(let rid, let cid) = stored.effect else { return false }
+            return rid == config.id && cid == cycleID
+        })
+        XCTAssertTrue(pending.contains { stored in
+            guard case .dismissStrongOverlay(let rid, let cid) = stored.effect else { return false }
+            return rid == config.id && cid == cycleID
+        })
+    }
+
+    func testDeleteUnknownReminderIsNoOp() async throws {
+        let store = try CoreDataReminderStore(inMemory: true)
+        let engine = ReminderEngine(store: store)
+        try await engine.handle(.delete(UUID()), now: t0)
+
+        XCTAssertTrue(try store.loadReminders().isEmpty)
+        XCTAssertTrue(try store.loadPendingEffects().isEmpty)
+    }
+
     func testStaleCycleIDIsIgnored() async throws {
         let store = try CoreDataReminderStore(inMemory: true)
         let engine = ReminderEngine(store: store)

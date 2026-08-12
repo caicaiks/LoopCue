@@ -80,6 +80,49 @@ final class CoreDataReminderStoreTests: XCTestCase {
         XCTAssertTrue(try store.loadReminders().isEmpty)
     }
 
+    func testDeleteReminderCascadeRemovesEventsAndOwnEffects() throws {
+        let store = try CoreDataReminderStore(inMemory: true)
+        let config = makeConfig()
+        let otherID = UUID()
+        try store.saveReminder(StoredReminder(config: config, cycle: nil))
+
+        let cycleID = UUID()
+        try store.appendEvent(ReminderEvent(
+            reminderID: config.id,
+            cycleID: cycleID,
+            type: .weakTriggered,
+            occurredAt: Date()
+        ))
+        let ownEffect = StoredEffect(
+            id: UUID(),
+            effect: .sendWeakNotification(
+                reminderID: config.id,
+                cycleID: cycleID,
+                content: NotificationContent()
+            ),
+            dedupeKey: "weak:x",
+            isDone: false
+        )
+        let otherEffect = StoredEffect(
+            id: UUID(),
+            effect: .sendWeakNotification(
+                reminderID: otherID,
+                cycleID: UUID(),
+                content: NotificationContent()
+            ),
+            dedupeKey: "weak:y",
+            isDone: false
+        )
+        try store.appendEffect(ownEffect)
+        try store.appendEffect(otherEffect)
+
+        try store.deleteReminderCascade(id: config.id)
+
+        XCTAssertTrue(try store.loadReminders().isEmpty)
+        XCTAssertTrue(try store.loadEvents(reminderID: config.id).isEmpty)
+        XCTAssertEqual(try store.loadPendingEffects(), [otherEffect])
+    }
+
     func testRuntimePersistenceRoundTrip() throws {
         let store = try CoreDataReminderStore(inMemory: true)
         let config = makeConfig()

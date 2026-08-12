@@ -6,7 +6,7 @@ struct MenuBarView: View {
     @ObservedObject var appModel: AppModel
     let onSend: (ReminderIntent) -> Void
     let onOpenList: () -> Void
-    let onReset: () -> Void
+    let onOpenSettings: () -> Void
     let isLoginItemEnabled: Bool
     let loginItemNeedsApproval: Bool
     let onToggleLoginItem: (Bool) -> Void
@@ -115,13 +115,13 @@ struct MenuBarView: View {
                     .foregroundStyle(.orange)
             }
 
-            Button("打开提醒列表") {
-                onOpenList()
-            }
-            .font(.callout)
-
-            Button("清空数据并重新开始") {
-                onReset()
+            HStack {
+                Button("打开提醒列表") {
+                    onOpenList()
+                }
+                Button("设置") {
+                    onOpenSettings()
+                }
             }
             .font(.callout)
 

@@ -1,5 +1,11 @@
 import SwiftUI
 
+/// 新建提醒的初始默认值（来自设置页，PRD 9.2）。
+struct EditorDefaults {
+    var displayScope: DisplayScope = .all
+    var awayPolicy: AwayPolicy = .pause(threshold: .minutes(5))
+}
+
 /// 新建 / 编辑提醒的表单（PRD F-01 / 技术方案 5 Features/ReminderEditor）。
 ///
 /// 保存时在 Domain 层统一校验，失败给出就地错误提示；
@@ -29,7 +35,11 @@ struct ReminderEditorView: View {
     @State private var isEnabled: Bool
     @State private var validationError: String?
 
-    init(draft: ReminderConfig?, onSave: @escaping (ReminderConfig) -> Void) {
+    init(
+        draft: ReminderConfig?,
+        defaults: EditorDefaults = EditorDefaults(),
+        onSave: @escaping (ReminderConfig) -> Void
+    ) {
         self.draft = draft
         self.onSave = onSave
 
@@ -47,10 +57,10 @@ struct ReminderEditorView: View {
         _scheduleEndHour = State(initialValue: (schedule.endMinute + 59) / 60)
         _snoozeMinutes = State(initialValue: Self.minutes(of: draft?.snoozeDuration) ?? 10)
         _maxSnoozeCount = State(initialValue: draft?.maxSnoozeCount ?? 2)
-        let policy = draft?.awayPolicy ?? .pause(threshold: .minutes(5))
+        let policy = draft?.awayPolicy ?? defaults.awayPolicy
         _awayKind = State(initialValue: Self.kind(of: policy))
         _awayMinutes = State(initialValue: Self.thresholdMinutes(of: policy))
-        _displayScope = State(initialValue: draft?.displayScope ?? .all)
+        _displayScope = State(initialValue: draft?.displayScope ?? defaults.displayScope)
         _isEnabled = State(initialValue: draft?.isEnabled ?? true)
     }
 

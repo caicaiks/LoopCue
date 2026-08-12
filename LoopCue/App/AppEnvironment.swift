@@ -13,6 +13,7 @@ final class AppEnvironment {
     private let dispatcher: EffectDispatcher
     private let responseHandler: NotificationResponseHandler
     private let contextMonitor: SystemContextMonitor
+    private let categoryRegistrar: NotificationCategoryRegistrar
     private var tasks: [Task<Void, Never>] = []
 
     init() throws {
@@ -27,6 +28,7 @@ final class AppEnvironment {
         self.store = store
         self.engine = engine
         self.contextMonitor = contextMonitor
+        self.categoryRegistrar = NotificationCategoryRegistrar()
 
         let overlay = OverlayPresenter(
             onComplete: { reminderID, cycleID in
@@ -86,8 +88,9 @@ final class AppEnvironment {
         let appModel = AppModel(engine: engine)
         self.appModel = appModel
         // Overlay 消费快照：AppModel 是 stream 唯一消费者，这里做 MainActor 内转发。
-        appModel.onSnapshotUpdate = { [weak overlay] snapshot in
+        appModel.onSnapshotUpdate = { [weak overlay, weak categoryRegistrar] snapshot in
             overlay?.update(snapshot: snapshot)
+            categoryRegistrar?.update(snapshot: snapshot)
         }
         self.scheduler = Scheduler(engine: engine)
         self.dispatcher = EffectDispatcher(
@@ -96,7 +99,6 @@ final class AppEnvironment {
         )
         self.responseHandler = NotificationResponseHandler(engine: engine)
         UNUserNotificationCenter.current().delegate = responseHandler
-        registerNotificationCategories()
     }
 
     func start() {
