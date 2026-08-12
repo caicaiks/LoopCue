@@ -1,9 +1,11 @@
 import AppKit
 import SwiftUI
 
-/// 菜单栏主界面：展示 Engine 快照中的提醒与阶段（技术方案 14.2）。
+/// 菜单栏主界面：下一项投影、等待回应快捷操作（PRD 6.5 / 技术方案 14.2）。
 struct MenuBarView: View {
     @ObservedObject var appModel: AppModel
+    let onSend: (ReminderIntent) -> Void
+    let onOpenList: () -> Void
     let onReset: () -> Void
 
     var body: some View {
@@ -17,6 +19,34 @@ struct MenuBarView: View {
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 } else {
+                    if let next = snapshot.nextReminder {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("下一个提醒")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            HStack {
+                                Image(systemName: next.icon.rawValue)
+                                Text(next.name)
+                                Spacer()
+                                Text(UIFormatters.remaining(next.remainingToWeak))
+                            }
+                            .font(.callout)
+                        }
+                        Divider()
+                    }
+
+                    if !snapshot.pendingResponses.isEmpty {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("等待回应")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            ForEach(snapshot.pendingResponses, id: \.cycleID) { pending in
+                                pendingRow(pending)
+                            }
+                        }
+                        Divider()
+                    }
+
                     ForEach(snapshot.reminders) { reminder in
                         HStack {
                             Image(systemName: reminder.config.icon.rawValue)
@@ -45,6 +75,11 @@ struct MenuBarView: View {
 
             Divider()
 
+            Button("打开提醒列表") {
+                onOpenList()
+            }
+            .font(.callout)
+
             Button("清空数据并重新开始") {
                 onReset()
             }
@@ -56,7 +91,54 @@ struct MenuBarView: View {
             .font(.callout)
         }
         .padding()
-        .frame(minWidth: 260)
+        .frame(minWidth: 300)
+    }
+
+    private func pendingRow(_ pending: PendingReminderSnapshot) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Image(systemName: pending.icon.rawValue)
+                Text(pending.name)
+                Spacer()
+                Text(pendingLabel(pending))
+                    .foregroundStyle(.secondary)
+            }
+            HStack(spacing: 8) {
+                Button("已完成") {
+                    onSend(.complete(reminderID: pending.reminderID, cycleID: pending.cycleID))
+                }
+                if pending.phase == .weakPending || pending.phase == .strongPending,
+                   pending.snoozeCount < pending.maxSnoozeCount {
+                    Button("稍后提醒") {
+                        onSend(.snooze(reminderID: pending.reminderID, cycleID: pending.cycleID))
+                    }
+                }
+                Button("跳过") {
+                    onSend(.skip(reminderID: pending.reminderID, cycleID: pending.cycleID))
+                }
+            }
+            .font(.caption)
+        }
+        .font(.callout)
+    }
+
+    private func pendingLabel(_ pending: PendingReminderSnapshot) -> String {
+        switch pending.phase {
+        case .weakPending:
+            if let remaining = pending.remainingToStrong {
+                return "等待回应 · \(UIFormatters.remaining(remaining)) 后升级"
+            }
+            return "等待回应"
+        case .snoozed:
+            if let remaining = pending.remainingToStrong {
+                return "已延后 · \(UIFormatters.remaining(remaining)) 后提醒"
+            }
+            return "已延后"
+        case .strongPending:
+            return "等待升级"
+        case .counting:
+            return "计时中"
+        }
     }
 
     private func phaseLabel(_ phase: CyclePhase?) -> String {

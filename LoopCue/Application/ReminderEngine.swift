@@ -73,7 +73,7 @@ actor ReminderEngine {
     func reconcile(now: Date) throws {
         let stored = try store.loadReminders()
         for item in stored {
-            guard item.config.isEnabled, var cycle = item.cycle else { continue }
+            guard item.config.isEnabled, let cycle = item.cycle else { continue }
             let deltaSeconds = now.timeIntervalSince(cycle.lastCheckpointAt) * timeScale
             guard deltaSeconds > 0 else { continue }
             let reduction = ReminderReducer.advance(
@@ -96,9 +96,8 @@ actor ReminderEngine {
             try setEnabled(id: id, isEnabled: isEnabled, now: now)
         case .complete, .snooze, .skip, .triggerWeakNow, .dismissOverlay:
             try applyReceipt(intent, now: now)
-        case .update:
-            // M0-C 未实现编辑；编辑默认从下一轮生效，随后补齐。
-            break
+        case .update(let id, let config, let mode):
+            try update(id: id, config: config, mode: mode, now: now)
         }
         publish(try currentSnapshot(now: now))
     }
@@ -127,6 +126,59 @@ actor ReminderEngine {
         try store.saveReminder(StoredReminder(config: config, cycle: item.cycle))
     }
 
+    private func update(id: UUID, config: ReminderConfig, mode: ApplyMode, now: Date) throws {
+        guard case .success = ReminderValidation.validate(config) else {
+            throw ReminderEngineError.invalidConfig
+        }
+        guard let item = try store.loadReminders().first(where: { $0.config.id == id }) else {
+            return
+        }
+        // id 是 let 常量，编辑必须保留原 ID，因此用 init 重建配置。
+        let newConfig = ReminderConfig(
+            id: id,
+            name: config.name,
+            icon: config.icon,
+            message: config.message,
+            completionLabel: config.completionLabel,
+            interval: config.interval,
+            escalationDelay: config.escalationDelay,
+            snoozeDuration: config.snoozeDuration,
+            maxSnoozeCount: config.maxSnoozeCount,
+            awayPolicy: config.awayPolicy,
+            isEnabled: config.isEnabled,
+            createdAt: config.createdAt,
+            updatedAt: now
+        )
+
+        switch mode {
+        case .nextCycle:
+            // 当前轮保持原策略快照；新配置从下一轮生效。
+            try store.saveReminder(StoredReminder(config: newConfig, cycle: item.cycle))
+
+        case .immediate:
+            // 立即替换当前轮策略快照并保留已累计时长，然后按新阈值结算：
+            // 若已满足新条件，可立刻进入弱提醒或强提醒（技术方案 6.2）。
+            var cycle = item.cycle
+            cycle?.policy = CyclePolicySnapshot(config: newConfig)
+            try store.saveReminder(StoredReminder(config: newConfig, cycle: cycle))
+            guard let cycle else { return }
+            let deltaSeconds = now.timeIntervalSince(cycle.lastCheckpointAt) * timeScale
+            if deltaSeconds > 0 {
+                // 先结算尚未累计的时长（按新策略），advance 会在跨越新阈值时触发转换。
+                let reduction = ReminderReducer.advance(
+                    cycle,
+                    by: .seconds(Int64(deltaSeconds)),
+                    now: now
+                )
+                try persist(reduction, for: newConfig, now: now)
+            } else {
+                // 编辑时刻与 checkpoint 重合：直接用累计时长检查新阈值。
+                let reduction = ReminderReducer.reconcileBoundaries(cycle, now: now)
+                try persist(reduction, for: newConfig, now: now)
+            }
+        }
+    }
+
     private func applyReceipt(_ intent: ReminderIntent, now: Date) throws {
         guard
             let (reminderID, cycleID) = intent.cycleIdentity,
@@ -136,7 +188,14 @@ actor ReminderEngine {
         else {
             return // stale cycle：无副作用
         }
-        let reduction = ReminderReducer.apply(intent, to: cycle, now: now)
+        var reduction = ReminderReducer.apply(intent, to: cycle, now: now)
+        // 完成/跳过会创建新一轮；新一轮必须按「当前配置」重新拍策略快照，
+        // 这样编辑「从下一轮生效」的修改才能落点（技术方案 6.2）。
+        if reduction.cycle.id != cycle.id {
+            var newCycle = reduction.cycle
+            newCycle.policy = CyclePolicySnapshot(config: item.config)
+            reduction = Reduction(cycle: newCycle, events: reduction.events, effects: reduction.effects)
+        }
         try persist(reduction, for: item.config, now: now)
     }
 

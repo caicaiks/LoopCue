@@ -179,6 +179,52 @@ enum ReminderReducer {
         return cycle
     }
 
+    /// 不消耗时间，仅根据累计时长与当前阶段检查边界转换。
+    ///
+    /// 用于编辑「立即应用」：策略快照更新后，用已累计的有效时长对新的
+    /// 周期 / 升级阈值重新结算，可能连续满足多个条件（技术方案 6.2）。
+    static func reconcileBoundaries(_ cycle: ReminderCycle, now: Date) -> Reduction {
+        var cycle = cycle
+        var events: [ReminderEvent] = []
+        var effects: [ReminderEffect] = []
+
+        var didChange = true
+        while didChange {
+            didChange = false
+            switch cycle.phase {
+            case .counting:
+                guard cycle.activeElapsed >= cycle.policy.interval else { break }
+                cycle.phase = .weakPending
+                cycle.weakTriggeredAt = now
+                events.append(
+                    .init(reminderID: cycle.reminderID, cycleID: cycle.id, type: .weakTriggered, occurredAt: now)
+                )
+                effects.append(.sendWeakNotification(reminderID: cycle.reminderID, cycleID: cycle.id))
+                didChange = true
+
+            case .weakPending:
+                guard let delay = cycle.policy.escalationDelay,
+                      cycle.escalationElapsed >= delay
+                else { break }
+                cycle.phase = .strongPending
+                cycle.strongTriggeredAt = now
+                events.append(
+                    .init(reminderID: cycle.reminderID, cycleID: cycle.id, type: .strongTriggered, occurredAt: now)
+                )
+                effects.append(.presentStrongOverlay(reminderID: cycle.reminderID, cycleID: cycle.id))
+                didChange = true
+
+            case .snoozed, .strongPending:
+                break
+            }
+        }
+
+        guard !events.isEmpty || !effects.isEmpty else {
+            return .unchanged(cycle)
+        }
+        return Reduction(cycle: cycle, events: events, effects: effects)
+    }
+
     /// 处理闲置状态。只有「先观察到在场，再离开达到阈值」才自动完成（技术方案 6.4）。
     static func applyIdle(_ cycle: ReminderCycle, idleDuration: Duration, now: Date) -> Reduction {
         guard case .complete(let threshold) = cycle.policy.awayPolicy else {

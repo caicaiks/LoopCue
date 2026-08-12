@@ -29,6 +29,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         environment?.resetForTesting()
     }
 
+    /// UI 层唯一写入口：把 Intent 交给 Engine（技术方案 4.1 / 15.1）。
+    @MainActor
+    func send(_ intent: ReminderIntent) {
+        guard let engine = environment?.engine else { return }
+        Task {
+            try? await engine.handle(intent, now: Date())
+        }
+    }
+
     /// 菜单栏每次打开时刷新通知权限状态。
     @MainActor
     func refreshNotificationStatus() {

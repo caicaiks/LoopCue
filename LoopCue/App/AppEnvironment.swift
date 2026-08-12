@@ -63,7 +63,7 @@ final class AppEnvironment {
                 self.appModel.set(snapshot)
                 if snapshot.reminders.isEmpty {
                     try await self.engine.handle(
-                        .create(DefaultReminders.standUp),
+                        .create(ReminderTemplate.standUp.makeConfig()),
                         now: Date()
                     )
                 }
@@ -84,7 +84,10 @@ final class AppEnvironment {
     func resetForTesting() {
         Task {
             try? await engine.clearAll(now: Date())
-            try? await engine.handle(.create(DefaultReminders.standUp), now: Date())
+            try? await engine.handle(
+                .create(ReminderTemplate.standUp.makeConfig()),
+                now: Date()
+            )
         }
     }
 

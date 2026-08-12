@@ -153,4 +153,99 @@ final class ReminderEngineTests: XCTestCase {
         XCTAssertTrue(try store.loadEvents(reminderID: config.id).isEmpty)
         XCTAssertTrue(try store.loadPendingEffects().isEmpty)
     }
+
+    func testUpdateNextCycleKeepsCurrentRoundPolicy() async throws {
+        let store = try CoreDataReminderStore(inMemory: true)
+        let engine = ReminderEngine(store: store)
+        let config = makeConfig(name: "原", intervalMinutes: 30)
+        try await engine.handle(.create(config), now: t0)
+        try await engine.reconcile(now: t0.addingTimeInterval(10 * 60))
+
+        var newConfig = config
+        newConfig.interval = .minutes(10)
+        try await engine.handle(.update(config.id, newConfig, .nextCycle), now: t0.addingTimeInterval(10 * 60))
+
+        // 配置已更新，但当前轮仍按原策略计时。
+        let stored = try store.loadReminders().first
+        XCTAssertEqual(stored?.config.interval, .minutes(10))
+        XCTAssertEqual(stored?.cycle?.phase, .counting)
+        XCTAssertEqual(stored?.cycle?.policy.interval, .minutes(30))
+
+        // 完成后，新一轮使用新策略。
+        let cycleID = try XCTUnwrap(stored?.cycle?.id)
+        try await engine.handle(
+            .complete(reminderID: config.id, cycleID: cycleID),
+            now: t0.addingTimeInterval(11 * 60)
+        )
+        let next = try store.loadReminders().first
+        XCTAssertEqual(next?.cycle?.phase, .counting)
+        XCTAssertEqual(next?.cycle?.policy.interval, .minutes(10))
+    }
+
+    func testUpdateImmediateAppliesNewThreshold() async throws {
+        let store = try CoreDataReminderStore(inMemory: true)
+        let engine = ReminderEngine(store: store)
+        let config = makeConfig(name: "立即", intervalMinutes: 60)
+        try await engine.handle(.create(config), now: t0)
+        try await engine.reconcile(now: t0.addingTimeInterval(30 * 60))
+
+        // 编辑时刻与 checkpoint 重合（delta = 0）：靠累计时长重新结算新阈值。
+        var newConfig = config
+        newConfig.interval = .minutes(20)
+        try await engine.handle(.update(config.id, newConfig, .immediate), now: t0.addingTimeInterval(30 * 60))
+
+        let stored = try store.loadReminders().first
+        XCTAssertEqual(stored?.cycle?.phase, .weakPending)
+        XCTAssertEqual(stored?.cycle?.policy.interval, .minutes(20))
+        XCTAssertTrue(try store.loadPendingEffects().contains { stored in
+            if case .sendWeakNotification = stored.effect { return true }
+            return false
+        })
+    }
+
+    func testUpdateImmediateWithUnsettledDeltaAdvances() async throws {
+        let store = try CoreDataReminderStore(inMemory: true)
+        let engine = ReminderEngine(store: store)
+        let config = makeConfig(name: "立即增量", intervalMinutes: 60)
+        try await engine.handle(.create(config), now: t0)
+        try await engine.reconcile(now: t0.addingTimeInterval(30 * 60))
+
+        // 编辑时刻晚于 checkpoint：先结算 delta（30 分 + 2 分 = 32 分），
+        // 其中 1 分恰好补到 31 分钟边界进入弱提醒，剩余 1 分计入升级等待。
+        var newConfig = config
+        newConfig.interval = .minutes(31)
+        try await engine.handle(.update(config.id, newConfig, .immediate), now: t0.addingTimeInterval(32 * 60))
+
+        let stored = try store.loadReminders().first
+        XCTAssertEqual(stored?.cycle?.phase, .weakPending)
+        XCTAssertEqual(stored?.cycle?.activeElapsed, .minutes(31))
+        XCTAssertEqual(stored?.cycle?.escalationElapsed, .minutes(1))
+        XCTAssertEqual(stored?.cycle?.policy.interval, .minutes(31))
+    }
+
+    func testTwoRemindersAdvanceAndCompleteIndependently() async throws {
+        let store = try CoreDataReminderStore(inMemory: true)
+        let engine = ReminderEngine(store: store)
+        let a = makeConfig(name: "A", intervalMinutes: 5)
+        let b = makeConfig(name: "B", intervalMinutes: 30)
+        try await engine.handle(.create(a), now: t0)
+        try await engine.handle(.create(b), now: t0)
+
+        try await engine.reconcile(now: t0.addingTimeInterval(5 * 60))
+        let snapshot = try await engine.start(now: t0.addingTimeInterval(5 * 60))
+        XCTAssertEqual(snapshot.reminders.first(where: { $0.id == a.id })?.phase, .weakPending)
+        XCTAssertEqual(snapshot.reminders.first(where: { $0.id == b.id })?.phase, .counting)
+
+        let aCycleID = try XCTUnwrap(snapshot.reminders.first(where: { $0.id == a.id })?.cycleID)
+        try await engine.handle(
+            .complete(reminderID: a.id, cycleID: aCycleID),
+            now: t0.addingTimeInterval(5 * 60)
+        )
+
+        let after = try await engine.start(now: t0.addingTimeInterval(5 * 60))
+        XCTAssertEqual(after.reminders.first(where: { $0.id == a.id })?.phase, .counting)
+        XCTAssertEqual(after.reminders.first(where: { $0.id == b.id })?.phase, .counting)
+        // B 的累计时长不受 A 完成影响。
+        XCTAssertEqual(after.reminders.first(where: { $0.id == b.id })?.activeElapsed, .minutes(5))
+    }
 }

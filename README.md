@@ -7,13 +7,15 @@ LoopCue（叮刻）是一款 macOS 菜单栏常驻的渐进式周期提醒器：
 ## 当前状态
 
 - 文档阶段已完成：PRD、技术方案、规范速览、AGENTS.md。
-- M0 进行中：工程骨架、领域内核与纵向闭环核心（Engine / Core Data 持久化 / Outbox / EffectDispatcher）已完成，34 个单元测试通过；真机通知与全屏 Overlay 待验证。
+- M0 已完成：工程骨架、领域内核、纵向闭环核心（Engine / Core Data 持久化 / Outbox / EffectDispatcher）、通知回执与全屏 Overlay。
+- M1-A 进行中：四模板（起身/喝水/远眺/自定义）、提醒列表与新建/编辑/启停/删除、编辑「下一轮/立即」生效、菜单栏下一项与等待回应快捷操作已完成，51 个单元测试通过。
+- 待办：强提醒多卡队列、睡眠/锁屏/闲置门控（M1-B）、生效时段、多屏热插拔与设置页（M1-C）。
 
 ## 目录结构
 
 ```text
 LoopCue/
-├── LoopCue.xcodeproj          # xcodegen 生成，提交进仓库可直接打开
+├── LoopCue.xcodeproj          # xcodegen 生成，仅本地保留（已 gitignore）
 ├── project.yml                # 工程描述，改动结构后运行 xcodegen generate 重新生成
 ├── LoopCue/
 │   ├── App/                   # @main 入口、AppDelegate、环境
@@ -49,7 +51,7 @@ make open       # 生成并打开 Xcode
 
 ### 测试提示
 
-- **Debug 时间倍率**：Debug 构建下时间推进为 10 倍速，「起身活动」默认 5 分钟提醒实际 30 秒触发、2 分钟升级实际 12 秒触发，方便真机验证闭环。Release 恒为真实时间，该倍率不会进入 Release 构建。
+- **Debug 时间倍率**：Debug 构建下时间推进为 10 倍速，「起身活动」默认 30 分钟提醒实际约 3 分钟触发，方便真机验证闭环。Release 恒为真实时间，该倍率不会进入 Release 构建。
 - **每次启动重新计时**：当前版本每次启动都会把提醒重置为全新一轮（保留配置，清空事件与待处理效果），不会恢复上一轮的计时状态。
 - **单实例保护**：应用只允许一个菜单栏实例。若仍看到两个图标，说明存在修复前的残留进程，先退出旧实例再启动。
 
