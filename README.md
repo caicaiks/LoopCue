@@ -11,7 +11,8 @@ LoopCue（叮刻）是一款 macOS 菜单栏常驻的渐进式周期提醒器：
 - M1-A 已完成：四模板（起身/喝水/远眺/自定义）、提醒列表与新建/编辑/启停/删除、编辑「下一轮/立即」生效、菜单栏下一项与等待回应快捷操作，51 个单元测试通过。
 - M1-B 已完成：生效日/生效时段、系统上下文门控（睡眠/锁屏/闲置/离开/暂停不累计有效时长）、单项与全局暂停及定时恢复、离开暂停与起身自动完成、启停/唤醒/解锁门控重开、登录启动（SMAppService，菜单栏开关）。86 个单元测试通过。
 - M1-C Step 1 已完成：强提醒多卡队列（同一时刻一张主卡片 + 「还有 N 项等待回应」）、数据驱动卡片（自定义完成文案/延后/跳过/已等待时长）、Escape 暂时关闭 5 分钟抑制期、多屏热插拔重建、`DisplayScope`（所有/仅当前显示器）配置。
-- 待办：设置页、删除清理、通知动态 Category（M1-C Step 2）；Onboarding 与 Scheduler 唤醒点优化（M1-C Step 3）。详见 `docs/LoopCue-Development-Progress-v0.1.md`。
+- M1-C Step 2 已完成：设置页（通知权限修复入口、新建提醒默认覆盖显示器/离开阈值、登录启动、删除所有本地数据）、删除提醒级联清理通知与 Overlay、动态通知 Category（正文用 `config.message`、完成按钮自定义文案、`userInfo` 补 `schemaVersion`/`effectID`）。103 个单元测试通过。
+- 待办：Onboarding 引导流、Scheduler 按事件点唤醒优化、`remainingToWeak` 修复与「立即提醒一次」（M1-C Step 3）；M2 加固。详见 `docs/LoopCue-Development-Progress-v0.1.md`。
 
 ## 目录结构
 
