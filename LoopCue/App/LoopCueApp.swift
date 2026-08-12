@@ -28,7 +28,10 @@ private struct MenuBarContent: View {
                     appModel: appModel,
                     onSend: { appDelegate.send($0) },
                     onOpenList: { openWindow(id: "reminderList") },
-                    onReset: { appDelegate.resetForTesting() }
+                    onReset: { appDelegate.resetForTesting() },
+                    isLoginItemEnabled: appDelegate.isLoginItemEnabled,
+                    loginItemNeedsApproval: appDelegate.loginItemNeedsApproval,
+                    onToggleLoginItem: { appDelegate.setLoginItemEnabled($0) }
                 )
             } else if let error = appDelegate.launchError {
                 VStack(alignment: .leading, spacing: 4) {

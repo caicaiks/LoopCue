@@ -2,13 +2,18 @@ import AppKit
 import Foundation
 import os
 
+@MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     @Published private(set) var appModel: AppModel?
     @Published private(set) var launchError: String?
+    @Published private(set) var isLoginItemEnabled = false
+    @Published private(set) var loginItemNeedsApproval = false
     private var environment: AppEnvironment?
+    private let loginItem = LoginItemManager()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard Self.ensureSingleInstance() else { return }
+        refreshLoginItemStatus()
         do {
             let environment = try AppEnvironment()
             self.environment = environment
@@ -27,6 +32,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     @MainActor
     func resetForTesting() {
         environment?.resetForTesting()
+    }
+
+    /// 刷新登录启动状态（启动与每次切换后调用）。
+    @MainActor
+    func refreshLoginItemStatus() {
+        isLoginItemEnabled = loginItem.isEnabled
+        loginItemNeedsApproval = loginItem.requiresApproval
+    }
+
+    /// 菜单栏「登录时启动」开关（PRD F-09）。
+    @MainActor
+    func setLoginItemEnabled(_ enabled: Bool) {
+        do {
+            if enabled {
+                try loginItem.enable()
+            } else {
+                try loginItem.disable()
+            }
+        } catch {
+            Logger(
+                subsystem: "com.loopcue.LoopCue",
+                category: "app"
+            ).error("登录启动切换失败: \(error, privacy: .public)")
+        }
+        refreshLoginItemStatus()
     }
 
     /// UI 层唯一写入口：把 Intent 交给 Engine（技术方案 4.1 / 15.1）。

@@ -7,6 +7,9 @@ struct MenuBarView: View {
     let onSend: (ReminderIntent) -> Void
     let onOpenList: () -> Void
     let onReset: () -> Void
+    let isLoginItemEnabled: Bool
+    let loginItemNeedsApproval: Bool
+    let onToggleLoginItem: (Bool) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -99,6 +102,18 @@ struct MenuBarView: View {
             }
 
             Divider()
+
+            Toggle("登录时启动", isOn: Binding(
+                get: { isLoginItemEnabled },
+                set: { onToggleLoginItem($0) }
+            ))
+            .font(.callout)
+
+            if loginItemNeedsApproval {
+                Text("请在 系统设置 → 通用 → 登录项 中确认后生效。")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            }
 
             Button("打开提醒列表") {
                 onOpenList()
