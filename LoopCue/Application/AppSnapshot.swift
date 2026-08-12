@@ -54,6 +54,13 @@ struct StrongReminderSnapshot: Equatable, Sendable {
     let completionLabel: String
     let strongTriggeredAt: Date?
     let createdAt: Date
+    /// 本轮已延后次数 / 每轮上限（决定是否显示延后按钮）。
+    let snoozeCount: Int
+    let maxSnoozeCount: Int
+    /// 延后时长（延后按钮文案用）。
+    let snoozeDuration: Duration
+    /// 覆盖范围：所有显示器 / 仅当前显示器。
+    let displayScope: DisplayScope
 }
 
 struct AppSnapshot: Equatable, Sendable {
@@ -137,7 +144,7 @@ struct AppSnapshot: Equatable, Sendable {
                 case .snoozed:
                     remainingToStrong = cycle.snoozeRemaining
                 case .strongPending:
-                    remainingToStrong = .zero
+                    remainingToStrong = cycle.overlaySuppressionRemaining
                 case .counting:
                     remainingToStrong = nil
                 }
@@ -154,7 +161,10 @@ struct AppSnapshot: Equatable, Sendable {
                     )
                 )
 
-                if cycle.phase == .strongPending {
+                // 被暂时关闭（Escape/隐藏）的轮次不进覆盖队列，5 分钟后再现；
+                // 菜单栏 pendingResponses 仍会显示它（技术方案 11.4）。
+                if cycle.phase == .strongPending,
+                   cycle.overlaySuppressionRemaining == nil {
                     strong.append(
                         StrongReminderSnapshot(
                             reminderID: config.id,
@@ -164,7 +174,11 @@ struct AppSnapshot: Equatable, Sendable {
                             message: config.message,
                             completionLabel: config.completionLabel,
                             strongTriggeredAt: cycle.strongTriggeredAt,
-                            createdAt: config.createdAt
+                            createdAt: config.createdAt,
+                            snoozeCount: cycle.snoozeCount,
+                            maxSnoozeCount: cycle.policy.maxSnoozeCount,
+                            snoozeDuration: cycle.policy.snoozeDuration,
+                            displayScope: cycle.policy.displayScope
                         )
                     )
                 }

@@ -175,6 +175,9 @@ struct MenuBarView: View {
             }
             return "已延后"
         case .strongPending:
+            if let remaining = pending.remainingToStrong, remaining > .zero {
+                return "已暂时关闭 · \(UIFormatters.remaining(remaining)) 后再次提醒"
+            }
             return "等待升级"
         case .counting:
             return "计时中"

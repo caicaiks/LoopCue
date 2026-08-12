@@ -15,6 +15,14 @@ enum AwayPolicy: Sendable, Equatable, Codable {
     case complete(threshold: Duration)
 }
 
+/// 强提醒覆盖的显示器范围（PRD 6.4 / 技术方案 11.2）。
+enum DisplayScope: String, Sendable, Equatable, Codable, CaseIterable {
+    /// 覆盖所有已连接显示器（PRD 默认）。
+    case all
+    /// 仅覆盖触发瞬间鼠标所在的显示器（找不到时回退主屏）。
+    case current
+}
+
 /// 用户保存的周期行动配置（PRD 数据模型草案 / 技术方案 6.1）。
 struct ReminderConfig: Identifiable, Equatable, Sendable {
     let id: UUID
@@ -28,6 +36,7 @@ struct ReminderConfig: Identifiable, Equatable, Sendable {
     var snoozeDuration: Duration
     var maxSnoozeCount: Int
     var awayPolicy: AwayPolicy
+    var displayScope: DisplayScope
     var isEnabled: Bool
     var createdAt: Date
     var updatedAt: Date
@@ -44,6 +53,7 @@ struct ReminderConfig: Identifiable, Equatable, Sendable {
         snoozeDuration: Duration = .minutes(10),
         maxSnoozeCount: Int = 2,
         awayPolicy: AwayPolicy = .pause(threshold: .minutes(5)),
+        displayScope: DisplayScope = .all,
         isEnabled: Bool = true,
         createdAt: Date = Date(),
         updatedAt: Date = Date()
@@ -59,6 +69,7 @@ struct ReminderConfig: Identifiable, Equatable, Sendable {
         self.snoozeDuration = snoozeDuration
         self.maxSnoozeCount = maxSnoozeCount
         self.awayPolicy = awayPolicy
+        self.displayScope = displayScope
         self.isEnabled = isEnabled
         self.createdAt = createdAt
         self.updatedAt = updatedAt
@@ -84,6 +95,10 @@ extension ReminderConfig: Codable {
         snoozeDuration = try container.decode(Duration.self, forKey: .snoozeDuration)
         maxSnoozeCount = try container.decode(Int.self, forKey: .maxSnoozeCount)
         awayPolicy = try container.decode(AwayPolicy.self, forKey: .awayPolicy)
+        displayScope = try container.decodeIfPresent(
+            DisplayScope.self,
+            forKey: .displayScope
+        ) ?? .all
         isEnabled = try container.decode(Bool.self, forKey: .isEnabled)
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         updatedAt = try container.decode(Date.self, forKey: .updatedAt)

@@ -25,6 +25,7 @@ struct ReminderEditorView: View {
     @State private var maxSnoozeCount: Int
     @State private var awayKind: AwayKind
     @State private var awayMinutes: Int
+    @State private var displayScope: DisplayScope
     @State private var isEnabled: Bool
     @State private var validationError: String?
 
@@ -49,6 +50,7 @@ struct ReminderEditorView: View {
         let policy = draft?.awayPolicy ?? .pause(threshold: .minutes(5))
         _awayKind = State(initialValue: Self.kind(of: policy))
         _awayMinutes = State(initialValue: Self.thresholdMinutes(of: policy))
+        _displayScope = State(initialValue: draft?.displayScope ?? .all)
         _isEnabled = State(initialValue: draft?.isEnabled ?? true)
     }
 
@@ -70,6 +72,10 @@ struct ReminderEditorView: View {
                 Toggle("未回应升级为全屏提醒", isOn: $escalationEnabled)
                 if escalationEnabled {
                     Stepper("等待 \(escalationMinutes) 分钟", value: $escalationMinutes, in: 1...1440)
+                }
+                Picker("全屏强提醒覆盖", selection: $displayScope) {
+                    Text("所有显示器").tag(DisplayScope.all)
+                    Text("仅当前显示器").tag(DisplayScope.current)
                 }
             }
 
@@ -159,6 +165,7 @@ struct ReminderEditorView: View {
         config.awayPolicy = awayKind == .pause
             ? .pause(threshold: UIFormatters.duration(minutes: awayMinutes))
             : .complete(threshold: UIFormatters.duration(minutes: awayMinutes))
+        config.displayScope = displayScope
         config.isEnabled = isEnabled
         return config
     }

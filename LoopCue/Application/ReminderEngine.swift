@@ -292,6 +292,7 @@ actor ReminderEngine {
             snoozeDuration: config.snoozeDuration,
             maxSnoozeCount: config.maxSnoozeCount,
             awayPolicy: config.awayPolicy,
+            displayScope: config.displayScope,
             isEnabled: config.isEnabled,
             createdAt: config.createdAt,
             updatedAt: now

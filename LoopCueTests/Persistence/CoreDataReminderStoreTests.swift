@@ -120,6 +120,20 @@ final class CoreDataReminderStoreTests: XCTestCase {
         XCTAssertEqual(decoded.activeSchedule, .alwaysOn)
     }
 
+    func testReminderConfigLegacyDecodeFallsBackToAllScreens() throws {
+        // 旧格式 JSON（无 displayScope 字段）→ 回退为 .all（PRD 默认覆盖所有显示器）。
+        let config = makeConfig(name: "旧数据")
+        let encoder = JSONEncoder()
+        let fullData = try encoder.encode(config)
+        var object = try JSONSerialization.jsonObject(with: fullData) as! [String: Any]
+        object.removeValue(forKey: "displayScope")
+        let legacyData = try JSONSerialization.data(withJSONObject: object)
+
+        let decoded = try JSONDecoder().decode(ReminderConfig.self, from: legacyData)
+        XCTAssertEqual(decoded.name, config.name)
+        XCTAssertEqual(decoded.displayScope, .all)
+    }
+
     func testRestartRecoveryWithSQLite() throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)

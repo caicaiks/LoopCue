@@ -11,6 +11,7 @@ struct CyclePolicySnapshot: Equatable, Sendable, Codable {
     let snoozeDuration: Duration
     let maxSnoozeCount: Int
     let awayPolicy: AwayPolicy
+    let displayScope: DisplayScope
 
     init(config: ReminderConfig) {
         self.interval = config.interval
@@ -19,5 +20,6 @@ struct CyclePolicySnapshot: Equatable, Sendable, Codable {
         self.snoozeDuration = config.snoozeDuration
         self.maxSnoozeCount = config.maxSnoozeCount
         self.awayPolicy = config.awayPolicy
+        self.displayScope = config.displayScope
     }
 }

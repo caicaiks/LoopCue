@@ -122,4 +122,43 @@ final class AppSnapshotTests: XCTestCase {
         XCTAssertNil(snapshot.nextReminder)
         XCTAssertEqual(snapshot.pendingResponses.count, 1)
     }
+
+    func testStrongQueueCarriesActionFields() {
+        var config = makeConfig(name: "强", interval: .minutes(5), escalationDelay: .minutes(2))
+        config.maxSnoozeCount = 3
+        let strongCycle = advance(config, by: .minutes(5), .minutes(2))
+        let projection = AppSnapshot.project(
+            [StoredReminder(config: config, cycle: strongCycle)],
+            now: now
+        )
+        XCTAssertEqual(projection.strong.count, 1)
+        let item = try? XCTUnwrap(projection.strong.first)
+        XCTAssertEqual(item?.snoozeCount, 0)
+        XCTAssertEqual(item?.maxSnoozeCount, 3)
+        XCTAssertEqual(item?.snoozeDuration, .minutes(10))
+        XCTAssertEqual(item?.displayScope, .all)
+    }
+
+    func testStrongQueueExcludesSuppressedCycleButPendingKeepsIt() {
+        let config = makeConfig(name: "强", interval: .minutes(5), escalationDelay: .minutes(2))
+        let strongCycle = advance(config, by: .minutes(5), .minutes(2))
+        XCTAssertEqual(strongCycle.phase, .strongPending)
+
+        // Escape / 暂时关闭 → 进入 5 分钟抑制期，覆盖队列不应再展示。
+        let suppressed = ReminderReducer.apply(
+            .dismissOverlay(reminderID: config.id, cycleID: strongCycle.id),
+            to: strongCycle,
+            now: now
+        ).cycle
+        XCTAssertEqual(suppressed.overlaySuppressionRemaining, .minutes(5))
+
+        let projection = AppSnapshot.project(
+            [StoredReminder(config: config, cycle: suppressed)],
+            now: now
+        )
+        // 覆盖队列排除，但菜单栏「等待回应」仍保留，抑制剩余用于倒计时展示。
+        XCTAssertTrue(projection.strong.isEmpty)
+        XCTAssertEqual(projection.pending.count, 1)
+        XCTAssertEqual(projection.pending.first?.remainingToStrong, .minutes(5))
+    }
 }

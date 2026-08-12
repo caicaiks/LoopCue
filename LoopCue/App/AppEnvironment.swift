@@ -8,6 +8,7 @@ final class AppEnvironment {
     let engine: ReminderEngine
     let appModel: AppModel
     private let store: any ReminderStore
+    private let overlay: OverlayPresenter
     private let scheduler: Scheduler
     private let dispatcher: EffectDispatcher
     private let responseHandler: NotificationResponseHandler
@@ -23,35 +24,71 @@ final class AppEnvironment {
             contextProvider: contextMonitor,
             appState: UserDefaultsAppStateStore()
         )
-        let overlay = OverlayPresenter { reminderID, cycleID in
-            Task {
-                do {
-                    try await engine.handle(
-                        .complete(reminderID: reminderID, cycleID: cycleID),
-                        now: Date()
-                    )
-                } catch {
-                    Logger(subsystem: "com.loopcue.LoopCue", category: "overlay")
-                        .error("完成失败: \(error, privacy: .public)")
-                }
-            }
-        } onDismiss: { reminderID, cycleID in
-            Task {
-                do {
-                    try await engine.handle(
-                        .dismissOverlay(reminderID: reminderID, cycleID: cycleID),
-                        now: Date()
-                    )
-                } catch {
-                    Logger(subsystem: "com.loopcue.LoopCue", category: "overlay")
-                        .error("关闭覆盖失败: \(error, privacy: .public)")
-                }
-            }
-        }
         self.store = store
         self.engine = engine
         self.contextMonitor = contextMonitor
-        self.appModel = AppModel(engine: engine)
+
+        let overlay = OverlayPresenter(
+            onComplete: { reminderID, cycleID in
+                Task {
+                    do {
+                        try await engine.handle(
+                            .complete(reminderID: reminderID, cycleID: cycleID),
+                            now: Date()
+                        )
+                    } catch {
+                        Logger(subsystem: "com.loopcue.LoopCue", category: "overlay")
+                            .error("完成失败: \(error, privacy: .public)")
+                    }
+                }
+            },
+            onSkip: { reminderID, cycleID in
+                Task {
+                    do {
+                        try await engine.handle(
+                            .skip(reminderID: reminderID, cycleID: cycleID),
+                            now: Date()
+                        )
+                    } catch {
+                        Logger(subsystem: "com.loopcue.LoopCue", category: "overlay")
+                            .error("跳过失败: \(error, privacy: .public)")
+                    }
+                }
+            },
+            onSnooze: { reminderID, cycleID in
+                Task {
+                    do {
+                        try await engine.handle(
+                            .snooze(reminderID: reminderID, cycleID: cycleID),
+                            now: Date()
+                        )
+                    } catch {
+                        Logger(subsystem: "com.loopcue.LoopCue", category: "overlay")
+                            .error("延后失败: \(error, privacy: .public)")
+                    }
+                }
+            },
+            onDismiss: { reminderID, cycleID in
+                Task {
+                    do {
+                        try await engine.handle(
+                            .dismissOverlay(reminderID: reminderID, cycleID: cycleID),
+                            now: Date()
+                        )
+                    } catch {
+                        Logger(subsystem: "com.loopcue.LoopCue", category: "overlay")
+                            .error("关闭覆盖失败: \(error, privacy: .public)")
+                    }
+                }
+            }
+        )
+        self.overlay = overlay
+        let appModel = AppModel(engine: engine)
+        self.appModel = appModel
+        // Overlay 消费快照：AppModel 是 stream 唯一消费者，这里做 MainActor 内转发。
+        appModel.onSnapshotUpdate = { [weak overlay] snapshot in
+            overlay?.update(snapshot: snapshot)
+        }
         self.scheduler = Scheduler(engine: engine)
         self.dispatcher = EffectDispatcher(
             store: store,
