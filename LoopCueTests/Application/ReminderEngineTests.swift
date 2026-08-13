@@ -118,6 +118,37 @@ final class ReminderEngineTests: XCTestCase {
         XCTAssertEqual(content.snoozeMinutes, 15)
     }
 
+    func testTriggerWeakNowQueuesNotificationWithConfigContent() async throws {
+        let store = try CoreDataReminderStore(inMemory: true)
+        let engine = ReminderEngine(store: store)
+        var config = makeConfig(name: "喝水")
+        config.message = "喝几口水"
+        config.completionLabel = "已喝水"
+        config.snoozeDuration = .minutes(15)
+        try await engine.handle(.create(config), now: t0)
+        let snapshot = try await engine.start(now: t0)
+        let cycleID = try XCTUnwrap(snapshot.reminders.first?.cycleID)
+
+        try await engine.handle(
+            .triggerWeakNow(reminderID: config.id, cycleID: cycleID),
+            now: t0
+        )
+
+        let after = try await engine.start(now: t0)
+        XCTAssertEqual(after.reminders.first?.phase, .weakPending)
+
+        let pending = try store.loadPendingEffects()
+        let contents = pending.compactMap { stored -> NotificationContent? in
+            guard case .sendWeakNotification(_, _, let content) = stored.effect else { return nil }
+            return content
+        }
+        let content = try XCTUnwrap(contents.first)
+        XCTAssertEqual(content.name, "喝水")
+        XCTAssertEqual(content.message, "喝几口水")
+        XCTAssertEqual(content.completionLabel, "已喝水")
+        XCTAssertEqual(content.snoozeMinutes, 15)
+    }
+
     func testDeleteCascadesRowsAndQueuesCleanupEffects() async throws {
         let store = try CoreDataReminderStore(inMemory: true)
         let engine = ReminderEngine(store: store)

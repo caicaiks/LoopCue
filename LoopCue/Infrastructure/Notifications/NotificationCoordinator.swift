@@ -1,4 +1,5 @@
 import Foundation
+import os
 import UserNotifications
 
 /// 通知操作标识（固定 ID，展示标题由 Category 动态决定，技术方案 10.2）。
@@ -231,6 +232,14 @@ struct SystemEffectExecutor: EffectExecutor {
         effectID: UUID
     ) async {
         let center = UNUserNotificationCenter.current()
+        let logger = Logger(subsystem: "com.loopcue.LoopCue", category: "notification")
+        let settings = await center.notificationSettings()
+        guard NotificationSubmissionPolicy.isAllowed(settings.authorizationStatus) else {
+            // 无权限时系统会直接丢弃提交；明确记录，便于从 Console 定位
+            // 「点击立即提醒一次但没弹通知」这类问题（技术方案 17，不记正文）。
+            logger.warning("通知权限未开启（raw=\(settings.authorizationStatus.rawValue)），跳过弱提醒提交")
+            return
+        }
         let request = UNNotificationRequest(
             identifier: "weak.\(reminderID.uuidString).\(cycleID.uuidString)",
             content: NotificationContentBuilder.make(
@@ -241,7 +250,12 @@ struct SystemEffectExecutor: EffectExecutor {
             ),
             trigger: nil
         )
-        try? await center.add(request)
+        do {
+            try await center.add(request)
+            logger.info("弱提醒通知已提交")
+        } catch {
+            logger.error("弱提醒通知提交失败: \(error, privacy: .public)")
+        }
     }
 
     private func clear(reminderID: UUID, cycleID: UUID) async {
@@ -255,5 +269,12 @@ struct SystemEffectExecutor: EffectExecutor {
             center.removePendingNotificationRequests(withIdentifiers: pendingIDs)
         }
         center.removeDeliveredNotifications(withIdentifiers: [prefix])
+    }
+}
+
+/// 通知提交权限判定（纯函数，便于测试）。
+enum NotificationSubmissionPolicy {
+    static func isAllowed(_ status: UNAuthorizationStatus) -> Bool {
+        status == .authorized || status == .provisional
     }
 }

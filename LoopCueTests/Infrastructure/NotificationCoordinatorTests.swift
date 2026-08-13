@@ -182,4 +182,11 @@ final class NotificationCoordinatorTests: XCTestCase {
         XCTAssertEqual(cid, cycleID)
         XCTAssertEqual(content, NotificationContent())
     }
+
+    func testSubmissionPolicyAllowsOnlyAuthorizedOrProvisional() {
+        XCTAssertTrue(NotificationSubmissionPolicy.isAllowed(.authorized))
+        XCTAssertTrue(NotificationSubmissionPolicy.isAllowed(.provisional))
+        XCTAssertFalse(NotificationSubmissionPolicy.isAllowed(.denied))
+        XCTAssertFalse(NotificationSubmissionPolicy.isAllowed(.notDetermined))
+    }
 }

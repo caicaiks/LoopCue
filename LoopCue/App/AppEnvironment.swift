@@ -110,7 +110,13 @@ final class AppEnvironment {
                 self.appModel.set(snapshot)
                 // 首次引导（Onboarding）负责创建第一个提醒与申请通知权限，
                 // 不再在启动时自动建模板或抢占权限（PRD 6.1 / 技术方案 10.1）。
-                await self.refreshNotificationStatus()
+                let status = await self.refreshNotificationStatus()
+                // 回归用户（已有提醒、跳过引导）：若从未决定过通知权限则补一次申请，
+                // 避免升级后「立即提醒一次 / 弱提醒」静默失效（提交无权限通知被系统丢弃）。
+                if !snapshot.reminders.isEmpty, status == .notDetermined {
+                    await self.requestNotificationAuthorization()
+                    await self.refreshNotificationStatus()
+                }
                 self.contextMonitor.start { [weak self] in
                     guard let self else { return }
                     Task {
@@ -159,12 +165,15 @@ final class AppEnvironment {
         }
     }
 
-    private func refreshNotificationStatus() async {
+    @discardableResult
+    private func refreshNotificationStatus() async -> UNAuthorizationStatus {
         let settings = await UNUserNotificationCenter.current().notificationSettings()
         let status = settings.authorizationStatus
         let allowed = (status == .authorized || status == .provisional)
         appModel.setNotificationAllowed(allowed)
         appModel.setNotificationStatusDetail(Self.describe(status))
+        appModel.setNotificationAuthorizationStatus(status)
+        return status
     }
 
     private static func describe(_ status: UNAuthorizationStatus) -> String {

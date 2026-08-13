@@ -22,6 +22,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     private var onboardingSessionActive = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // 单元测试宿主进程也会走到这里；跳过启动逻辑，避免
+        // 单实例保护终止测试宿主，也避免测试运行触碰真实数据存储。
+        if NSClassFromString("XCTestCase") != nil {
+            return
+        }
         guard Self.ensureSingleInstance() else { return }
         refreshLoginItemStatus()
         do {

@@ -104,8 +104,15 @@ struct SettingsView: View {
         }
 
         if allowed != true {
-            Button("打开系统设置") {
-                NotificationPermissionLink.openSystemSettings()
+            HStack {
+                if appDelegate.appModel?.notificationAuthorizationStatus == .notDetermined {
+                    Button("申请通知权限") {
+                        appDelegate.requestNotificationAuthorization()
+                    }
+                }
+                Button("打开系统设置") {
+                    NotificationPermissionLink.openSystemSettings()
+                }
             }
             Text("叮刻仍在计时，但无法发送弱提醒。你可以前往系统设置重新开启。")
                 .font(.caption)
