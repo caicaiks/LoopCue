@@ -91,6 +91,15 @@ struct MenuBarView: View {
                 .foregroundStyle(.orange)
             }
 
+            if let result = appModel.notificationSubmitResult {
+                HStack(alignment: .top, spacing: 6) {
+                    Image(systemName: result.isFailure ? "exclamationmark.triangle" : "checkmark.circle")
+                    Text(result.detail)
+                }
+                .font(.caption)
+                .foregroundStyle(result.isFailure ? .orange : .secondary)
+            }
+
             if let snapshot = appModel.snapshot, snapshot.isGloballyPaused {
                 HStack {
                     Image(systemName: "pause.circle.fill")

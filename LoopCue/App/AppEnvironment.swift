@@ -95,7 +95,14 @@ final class AppEnvironment {
         self.scheduler = Scheduler(engine: engine)
         self.dispatcher = EffectDispatcher(
             store: store,
-            executor: SystemEffectExecutor(overlay: overlay)
+            executor: SystemEffectExecutor(
+                overlay: overlay,
+                onSubmitResult: { [weak appModel] result in
+                    Task { @MainActor in
+                        appModel?.setNotificationSubmitResult(result)
+                    }
+                }
+            )
         )
         self.responseHandler = NotificationResponseHandler(engine: engine)
         UNUserNotificationCenter.current().delegate = responseHandler
@@ -171,19 +178,27 @@ final class AppEnvironment {
         let status = settings.authorizationStatus
         let allowed = (status == .authorized || status == .provisional)
         appModel.setNotificationAllowed(allowed)
-        appModel.setNotificationStatusDetail(Self.describe(status))
+        appModel.setNotificationStatusDetail(Self.describe(status, alertSetting: settings.alertSetting))
         appModel.setNotificationAuthorizationStatus(status)
         return status
     }
 
-    private static func describe(_ status: UNAuthorizationStatus) -> String {
+    private static func describe(
+        _ status: UNAuthorizationStatus,
+        alertSetting: UNNotificationSetting
+    ) -> String {
+        let base: String
         switch status {
-        case .notDetermined: return "未决定 notDetermined"
-        case .denied: return "已拒绝 denied"
-        case .authorized: return "已允许 authorized"
-        case .provisional: return "临时 provisional"
-        @unknown default: return "未知 (\(status.rawValue))"
+        case .notDetermined: base = "未决定 notDetermined"
+        case .denied: base = "已拒绝 denied"
+        case .authorized: base = "已允许 authorized"
+        case .provisional: base = "临时 provisional"
+        @unknown default: base = "未知 (\(status.rawValue))"
         }
+        if (status == .authorized || status == .provisional), alertSetting != .enabled {
+            return base + " · 横幅/声音已关闭"
+        }
+        return base
     }
 
     private func drainLoop() async {

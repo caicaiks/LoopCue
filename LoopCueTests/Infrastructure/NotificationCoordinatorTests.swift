@@ -189,4 +189,21 @@ final class NotificationCoordinatorTests: XCTestCase {
         XCTAssertFalse(NotificationSubmissionPolicy.isAllowed(.denied))
         XCTAssertFalse(NotificationSubmissionPolicy.isAllowed(.notDetermined))
     }
+
+    func testSubmitResultDetailText() {
+        XCTAssertEqual(
+            NotificationSubmitResult.succeeded(alertEnabled: true).detail,
+            "通知提交成功"
+        )
+        XCTAssertEqual(
+            NotificationSubmitResult.succeeded(alertEnabled: false).detail,
+            "已提交（横幅关闭，仅进通知中心）"
+        )
+        XCTAssertEqual(
+            NotificationSubmitResult.skippedUnauthorized.detail,
+            "未提交：通知权限未开启"
+        )
+        XCTAssertTrue(NotificationSubmitResult.failed("boom").isFailure)
+        XCTAssertFalse(NotificationSubmitResult.succeeded(alertEnabled: true).isFailure)
+    }
 }

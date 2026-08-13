@@ -202,9 +202,14 @@ protocol EffectExecutor: Sendable {
 /// 系统效果执行器：弱提醒通知 + 清理 + 覆盖窗口。
 struct SystemEffectExecutor: EffectExecutor {
     private let overlay: any OverlayPresenting
+    private let onSubmitResult: (@Sendable (NotificationSubmitResult) -> Void)?
 
-    init(overlay: any OverlayPresenting) {
+    init(
+        overlay: any OverlayPresenting,
+        onSubmitResult: (@Sendable (NotificationSubmitResult) -> Void)? = nil
+    ) {
         self.overlay = overlay
+        self.onSubmitResult = onSubmitResult
     }
 
     func execute(_ effect: ReminderEffect, effectID: UUID) async {
@@ -238,6 +243,7 @@ struct SystemEffectExecutor: EffectExecutor {
             // 无权限时系统会直接丢弃提交；明确记录，便于从 Console 定位
             // 「点击立即提醒一次但没弹通知」这类问题（技术方案 17，不记正文）。
             logger.warning("通知权限未开启（raw=\(settings.authorizationStatus.rawValue)），跳过弱提醒提交")
+            onSubmitResult?(.skippedUnauthorized)
             return
         }
         let request = UNNotificationRequest(
@@ -253,8 +259,10 @@ struct SystemEffectExecutor: EffectExecutor {
         do {
             try await center.add(request)
             logger.info("弱提醒通知已提交")
+            onSubmitResult?(.succeeded(alertEnabled: settings.alertSetting == .enabled))
         } catch {
             logger.error("弱提醒通知提交失败: \(error, privacy: .public)")
+            onSubmitResult?(.failed("\(error.localizedDescription)"))
         }
     }
 
@@ -276,5 +284,30 @@ struct SystemEffectExecutor: EffectExecutor {
 enum NotificationSubmissionPolicy {
     static func isAllowed(_ status: UNAuthorizationStatus) -> Bool {
         status == .authorized || status == .provisional
+    }
+}
+
+/// 一次弱提醒通知提交的结果（供 UI 展示，把「点了没弹」变成可见反馈）。
+enum NotificationSubmitResult: Equatable, Sendable {
+    case succeeded(alertEnabled: Bool)
+    case skippedUnauthorized
+    case failed(String)
+
+    var detail: String {
+        switch self {
+        case .succeeded(let alertEnabled):
+            return alertEnabled ? "通知提交成功" : "已提交（横幅关闭，仅进通知中心）"
+        case .skippedUnauthorized:
+            return "未提交：通知权限未开启"
+        case .failed(let message):
+            return "通知提交失败：\(message)"
+        }
+    }
+
+    var isFailure: Bool {
+        switch self {
+        case .succeeded: return false
+        case .skippedUnauthorized, .failed: return true
+        }
     }
 }

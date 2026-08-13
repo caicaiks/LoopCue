@@ -17,6 +17,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var notificationStatusDetail: String?
     /// 原始授权状态（设置页区分「未决定 / 已拒绝」的修复入口）。
     @Published private(set) var notificationAuthorizationStatus: UNAuthorizationStatus?
+    /// 最近一次弱提醒通知提交结果（诊断用）。
+    @Published private(set) var notificationSubmitResult: NotificationSubmitResult?
     /// 快照更新回调（AppEnvironment 注入，用于驱动 Overlay 等 MainActor 消费者）。
     var onSnapshotUpdate: (@MainActor (AppSnapshot?) -> Void)?
     private var task: Task<Void, Never>?
@@ -48,5 +50,9 @@ final class AppModel: ObservableObject {
 
     func setNotificationAuthorizationStatus(_ status: UNAuthorizationStatus?) {
         self.notificationAuthorizationStatus = status
+    }
+
+    func setNotificationSubmitResult(_ result: NotificationSubmitResult?) {
+        self.notificationSubmitResult = result
     }
 }
