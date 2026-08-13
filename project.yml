@@ -13,7 +13,7 @@ settings:
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
     CODE_SIGN_STYLE: Automatic
-    DEVELOPMENT_TEAM: 627M2GD4Q9
+    DEVELOPMENT_TEAM: V3VLU2P2MZ
 targets:
   LoopCue:
     type: application
@@ -26,11 +26,15 @@ targets:
         LSMinimumSystemVersion: "13.0"
         LSUIElement: true
         NSHumanReadableCopyright: "Copyright © 2026 LoopCue"
+    entitlements:
+      path: LoopCue/Resources/LoopCue.entitlements
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.loopcue.LoopCue
         GENERATE_INFOPLIST_FILE: false
         ENABLE_HARDENED_RUNTIME: true
+        # App Sandbox capability（Xcode 16+ 用构建设置注入 sandbox entitlement，entitlements 文件保持最小）
+        ENABLE_APP_SANDBOX: YES
   LoopCueTests:
     type: bundle.unit-test
     platform: macOS
