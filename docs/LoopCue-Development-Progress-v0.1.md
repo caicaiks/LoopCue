@@ -19,9 +19,9 @@
 | M1-A 完整配置与多提醒 | ✅ | 四模板、列表/编辑/启停/删除、下一轮/立即生效 |
 | M1-B 系统上下文 | ✅ | 生效时段、睡眠/锁屏/闲置/离开、单项与全局暂停、登录启动 |
 | M1-C 多屏与产品完整度 | 🚧 待真机验证 | **Step 1/2/3 代码已完成**；真机清单（第 7 节）执行后关闭 |
-| M2 封闭测试加固 | ⬜ | 未开始 |
+| M2 封闭测试加固 | 🚧 已启动 | **App Sandbox 接入完成、签名链路打通**；其余项见第 6 节 Step 4 |
 
-单元测试：**116 个全部通过**（12 个测试类）。Debug / Release 构建均通过（Release 需关闭代码签名或使用开发者证书）。
+单元测试：**117 个全部通过**（12 个测试类）。Debug / Release 构建均通过（Apple Development 证书自动签名；Release 分发仍待 Developer ID 证书，见第 5 节）。
 
 ## 2. 最近改动（2026-08-12，M1-C Step 3）
 
@@ -61,13 +61,26 @@
 
 **根因**：Step 3 把通知权限申请移入 Onboarding 后，已有提醒的回归用户跳过引导，启动流程不再申请权限；本机此前授权请求失败（`UNErrorDomain Code=1`），状态停留在 `notDetermined`。`UNUserNotificationCenter.add` 在无权限时被系统静默丢弃，而执行器用 `try?` 吞掉了失败，导致问题不可见。
 
-**修复**（Commit 待记录）：
+**修复**（Commits `0f0fbfd`、`6ee9061`）：
 - 启动时若已有提醒且授权状态为 `notDetermined`，补一次 `requestAuthorization`（恢复升级前行为；首启仍由 Onboarding 延后申请）。
 - `SystemEffectExecutor` 提交通知前检查权限：未授权时明确记录并跳过；`center.add` 失败改为记录错误日志（不记提醒正文，符合技术方案 17）。
 - 设置页在 `notDetermined` 时显示「申请通知权限」按钮；`AppModel` 透出原始授权状态。
 - 测试宿主修复：`applicationDidFinishLaunching` 在 XCTest 环境下直接返回，避免单实例保护终止测试进程（`make test` 无需先退出正在运行的 App），也避免测试触碰真实数据存储。
 
 **验证**：116 个单元测试通过（新增 `triggerWeakNow` 效果链路与提交权限判定 2 个）；Debug / Release 构建通过。
+
+### 2.7 增强（2026-08-13）：通知提交结果诊断
+
+**Commit `55ef1d3`**：`SystemEffectExecutor` 提交通知后上报结果（成功 / 跳过 / 失败），菜单栏直接显示；已授权但 `alertSetting` 关闭时明确提示「仅进通知中心」；设置页状态详情追加「横幅 / 声音已关闭」。
+
+**验证**：117 个单元测试通过（新增通知提交结果链路 1 个）；Debug / Release 构建通过。
+
+### 2.8 M2 起步（2026-08-13）：App Sandbox 接入与签名链路
+
+- **App Sandbox 启用**（AGENTS.md 架构红线、M2 检查项）：`ENABLE_APP_SANDBOX = YES` 写入 `project.yml` 的 LoopCue target（Xcode 16+ 通过构建设置注入 sandbox entitlement，`LoopCue/Resources/LoopCue.entitlements` 保持最小空字典，由 Xcode Signing & Capabilities 管理）。`codesign -d --entitlements` 确认 Debug / Release 产物均嵌入 `com.apple.security.app-sandbox`。
+- **签名链路打通**：team 变更为 `V3VLU2P2MZ`（`project.yml` 已同步），本机配置 Apple Development 证书（395460271@qq.com），自动签名下 Debug / Release 构建通过；此前 ad-hoc 签名会被 Xcode 剥离 sandbox entitlement，已弃用。
+- **文档同步**：`AGENTS.md` 现状段落与里程碑状态、`README.md` 测试数与待办、进展文档补记 `55ef1d3`。
+- **验证**：117 个单元测试全部通过；Debug / Release 构建通过；沙盒真机回归项见第 7 节「M2 沙盒回归」。
 
 ## 3. 最近改动（2026-08-12，M1-C Step 2）
 
@@ -142,8 +155,9 @@
 | 问题 | 影响 | 状态 |
 | --- | --- | --- |
 | 重启恢复模式未启用（当前每次启动重新计时） | 产品决策，技术方案 13.1 恢复逻辑保留在 `start(now:)` | M2 前确认 |
-| 本机无开发者证书，Release 需 `CODE_SIGNING_ALLOWED=NO` | 上架/公证前需配置签名 | M2 |
-| CoreDataReminderStore `perform` 存在 Swift 6 Sendable 警告（历史遗留） | 仅警告，不影响运行 | 待清理 |
+| 沙盒后数据迁移到容器 `~/Library/Containers/com.loopcue.LoopCue` | 旧的 Application Support 数据与 UserDefaults（含 Onboarding 标记）不再读取，首次沙盒运行会重新走引导；当前 freshStart 语义下影响小 | 真机确认（第 7 节 M2 沙盒回归） |
+| 沙盒下空闲 API（`CGEventSource.secondsSinceLastEventType`）未真机确认 | 技术方案 12.2 已知风险：不可用则降级为睡眠/锁屏/会话门控并关闭「离开自动完成」 | 真机回归（第 7 节）；此前构建无沙盒，风险从未真正可测 |
+| Release 分发签名未配置 | 当前 Release 用 Apple Development 证书（含 get-task-allow），不可分发 | M2 签名/公证时换 Developer ID 证书 |
 | 动态 Category 稳定性未真机确认 | 自定义完成文案可能随系统限制失效 | 真机验证；不稳定则降级通用文案 |
 | Onboarding 未做「确认周期与升级时间」步骤 | PRD 6.1 第 3 步被简化为模板默认值/自定义编辑器 | M2 前确认是否补充 |
 
@@ -196,6 +210,15 @@
 4. **调度唤醒**：弱提醒/升级/延后结束按事件点触发（误差 < 30 秒）；无提醒或非生效时段时观察 CPU 空闲（不再每秒写库）。
 5. **删除全部数据**：删除后下次启动重新进入引导。
 
+### M2 沙盒回归（App Sandbox 启用后新增）
+
+1. **空闲门控**：StandUp 模板键鼠无输入 3 分钟后停止累计有效时长（验证 `CGEventSource.secondsSinceLastEventType` 在沙盒签名构建下可用）；若失效，按技术方案 12.2 降级方案处理。
+2. **数据容器**：确认数据写入 `~/Library/Containers/com.loopcue.LoopCue/Data`；首次沙盒运行重新出现 Onboarding（UserDefaults 迁容器，预期行为），创建提醒后一切正常。
+3. **登录启动**：`SMAppService` 注册/取消正常，登录项开关状态一致。
+4. **通知链路**：权限申请、动态 Category 按钮、点击正文完成在沙盒下正常。
+5. **全屏 Overlay**：强提醒覆盖窗口正常（沙盒不影响窗口层级），Escape 抑制期正常。
+6. **设置页深链**：「打开系统设置」通知权限入口在沙盒下可正常跳转。
+
 ## 8. 构建与测试环境说明
 
 ```bash
@@ -205,12 +228,13 @@ sudo xcode-select -s /Applications/Xcode.app   # 切换完整 Xcode
 
 # 常用命令（详见 Makefile）
 make generate   # project.yml -> LoopCue.xcodeproj
-make test       # 全部单元测试（116 个）
+make test       # 全部单元测试（117 个）
 make build      # Debug 构建
 make run        # 构建并启动（菜单栏）
 ```
 
-- 本机无开发者证书：构建需 `CODE_SIGNING_ALLOWED=NO`，或先在 Xcode 配置签名（`DEVELOPMENT_TEAM=627M2GD4Q9`）。
+- 签名：team `V3VLU2P2MZ`，本机已配置 Apple Development 证书（自动签名），Debug / Release 构建通过；App Sandbox 经 `ENABLE_APP_SANDBOX=YES` 注入，`codesign -d --entitlements` 可验证。分发签名（Developer ID / App Store）留待 M2 公证环节。
+- 注意：在 Xcode GUI 修改 Signing & Capabilities 后，不要手动改写 `LoopCue.entitlements` 内容（Xcode 会以 GUI 状态为准覆盖文件）；沙盒由构建设置控制，文件保持最小即可。
 - Debug 时间倍率 10 倍速（起身 30 分钟 ≈ 3 分钟弱提醒 / 6 分钟强提醒），Release 恒为真实时间；该倍率经 `#if DEBUG` 排除在 Release 之外。
 - 每次启动重新计时（`freshStart`）：保留配置，重置轮次与 Outbox，不清空历史事件表结构（事件与效果被清空）。
 - 测试运行器需连接 `testmanagerd`，必须在沙盒外终端执行；若出现 `Early unexpected exit`，先 `pkill -x LoopCue; pkill -x xctest` 再重试。

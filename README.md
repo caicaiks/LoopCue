@@ -13,7 +13,8 @@ LoopCue（叮刻）是一款 macOS 菜单栏常驻的渐进式周期提醒器：
 - M1-C Step 1 已完成：强提醒多卡队列（同一时刻一张主卡片 + 「还有 N 项等待回应」）、数据驱动卡片（自定义完成文案/延后/跳过/已等待时长）、Escape 暂时关闭 5 分钟抑制期、多屏热插拔重建、`DisplayScope`（所有/仅当前显示器）配置。
 - M1-C Step 2 已完成：设置页（通知权限修复入口、新建提醒默认覆盖显示器/离开阈值、登录启动、删除所有本地数据）、删除提醒级联清理通知与 Overlay、动态通知 Category（正文用 `config.message`、完成按钮自定义文案、`userInfo` 补 `schemaVersion`/`effectID`）。
 - M1-C Step 3 已完成：首次启动 Onboarding（说明 → 模板选择 → 创建后申请通知权限 → 可选登录启动，不再启动时抢权限/自动建模板）、Scheduler 按事件点唤醒 + 30 秒 checkpoint（门控期不写库）、UI 倒计时独立 1 秒展示、`remainingToWeak` 使用轮次策略快照、菜单栏「立即提醒一次」。116 个单元测试通过。
-- 待办：M1-C 真机验证清单（第 7 节）、M2 加固（Overlay 真机矩阵、产品决策、日志审计、签名公证、数据模型冻结）。详见 `docs/LoopCue-Development-Progress-v0.1.md`。
+- 通知提交结果诊断已完成：弱提醒提交后菜单栏显示成功/跳过/失败；已授权但横幅关闭时提示「仅进通知中心」；设置页展示「横幅/声音已关闭」。117 个单元测试通过。
+- M2 已启动：App Sandbox 已接入（`ENABLE_APP_SANDBOX` + 最小 entitlements，Debug/Release 签名均已验证嵌入）、签名链路打通（team `V3VLU2P2MZ`）。待办：M1-C 真机验证清单（第 7 节）、M2 沙盒真机回归、Overlay 真机矩阵、产品决策、日志审计、签名公证、数据模型冻结。详见 `docs/LoopCue-Development-Progress-v0.1.md`。
 
 ## 目录结构
 
