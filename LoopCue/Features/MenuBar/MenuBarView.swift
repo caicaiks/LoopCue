@@ -12,31 +12,35 @@ struct MenuBarView: View {
     let onToggleLoginItem: (Bool) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("叮刻 LoopCue")
                 .font(.headline)
+                .padding(.bottom, 2)
 
             if let snapshot = appModel.snapshot {
                 if snapshot.reminders.isEmpty {
                     Text("暂无提醒")
                         .font(.callout)
                         .foregroundStyle(.secondary)
+                        .padding(.vertical, 4)
                 } else {
                     if let next = snapshot.nextReminder {
-                        VStack(alignment: .leading, spacing: 2) {
+                        VStack(alignment: .leading, spacing: 8) {
                             Text("下一个提醒")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
-                            HStack {
+                            HStack(spacing: 8) {
                                 Image(systemName: next.icon.rawValue)
                                 Text(next.name)
-                                Spacer()
+                                Spacer(minLength: 12)
                                 TimelineView(.periodic(from: .now, by: 1)) { context in
                                     Text(UIFormatters.countdown(
                                         next.remainingToWeak,
                                         since: snapshot.now,
                                         now: context.date
                                     ))
+                                    .monospacedDigit()
+                                    .foregroundStyle(.secondary)
                                 }
                             }
                             .font(.callout)
@@ -46,13 +50,12 @@ struct MenuBarView: View {
                                     cycleID: next.cycleID
                                 ))
                             }
-                            .font(.caption)
                         }
-                        Divider()
+                        divider
                     }
 
                     if !snapshot.pendingResponses.isEmpty {
-                        VStack(alignment: .leading, spacing: 6) {
+                        VStack(alignment: .leading, spacing: 8) {
                             Text("等待回应")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
@@ -62,14 +65,14 @@ struct MenuBarView: View {
                                 }
                             }
                         }
-                        Divider()
+                        divider
                     }
 
                     ForEach(snapshot.reminders) { reminder in
-                        HStack {
+                        HStack(spacing: 8) {
                             Image(systemName: reminder.config.icon.rawValue)
                             Text(reminder.config.name)
-                            Spacer()
+                            Spacer(minLength: 12)
                             Text(phaseLabel(reminder.phase))
                                 .foregroundStyle(.secondary)
                         }
@@ -80,32 +83,31 @@ struct MenuBarView: View {
                 Text("加载中…")
                     .font(.callout)
                     .foregroundStyle(.secondary)
+                    .padding(.vertical, 4)
             }
 
             if let allowed = appModel.notificationAllowed, !allowed {
-                HStack(alignment: .top, spacing: 6) {
-                    Image(systemName: "bell.slash")
-                    Text("通知未开启（\(appModel.notificationStatusDetail ?? "未知")）。请在 系统设置 → 通知 → LoopCue 中开启。")
-                }
-                .font(.caption)
-                .foregroundStyle(.orange)
+                warningRow(
+                    icon: "bell.slash",
+                    text: "通知未开启（\(appModel.notificationStatusDetail ?? "未知")）。请在 系统设置 → 通知 → LoopCue 中开启。",
+                    isFailure: true
+                )
             }
 
             if let result = appModel.notificationSubmitResult {
-                HStack(alignment: .top, spacing: 6) {
-                    Image(systemName: result.isFailure ? "exclamationmark.triangle" : "checkmark.circle")
-                    Text(result.detail)
-                }
-                .font(.caption)
-                .foregroundStyle(result.isFailure ? .orange : .secondary)
+                warningRow(
+                    icon: result.isFailure ? "exclamationmark.triangle" : "checkmark.circle",
+                    text: result.detail,
+                    isFailure: result.isFailure
+                )
             }
 
             if let snapshot = appModel.snapshot, snapshot.isGloballyPaused {
-                HStack {
+                HStack(spacing: 8) {
                     Image(systemName: "pause.circle.fill")
                     Text("已全局暂停")
                         .foregroundStyle(.secondary)
-                    Spacer()
+                    Spacer(minLength: 12)
                     Button("恢复") {
                         onSend(.resumeAll)
                     }
@@ -113,11 +115,11 @@ struct MenuBarView: View {
                 .font(.callout)
             }
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text("暂停")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                HStack(spacing: 8) {
+                HStack(spacing: 10) {
                     Button("30 分钟") { onSend(.pauseAll(.timed(.minutes(30)))) }
                     Button("1 小时") { onSend(.pauseAll(.timed(.hours(1)))) }
                     Button("到明天") { onSend(.pauseAll(.untilMidnight)) }
@@ -125,7 +127,7 @@ struct MenuBarView: View {
                 .font(.caption)
             }
 
-            Divider()
+            divider
 
             Toggle("登录时启动", isOn: Binding(
                 get: { isLoginItemEnabled },
@@ -137,25 +139,40 @@ struct MenuBarView: View {
                 Text("请在 系统设置 → 通用 → 登录项 中确认后生效。")
                     .font(.caption)
                     .foregroundStyle(.orange)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
-            HStack {
+            HStack(spacing: 12) {
                 Button("打开提醒列表") {
                     onOpenList()
                 }
                 Button("设置") {
                     onOpenSettings()
                 }
-            }
-            .font(.callout)
-
-            Button("退出 LoopCue") {
-                NSApp.terminate(nil)
+                Spacer(minLength: 12)
+                Button("退出 LoopCue") {
+                    NSApp.terminate(nil)
+                }
             }
             .font(.callout)
         }
-        .padding()
-        .frame(minWidth: 300)
+        .padding(EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16))
+        .frame(minWidth: 320)
+    }
+
+    private var divider: some View {
+        Divider()
+            .padding(.vertical, 2)
+    }
+
+    private func warningRow(icon: String, text: String, isFailure: Bool) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: icon)
+            Text(text)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .font(.caption)
+        .foregroundStyle(isFailure ? Color.orange : Color.secondary)
     }
 
     private func pendingRow(
@@ -163,15 +180,17 @@ struct MenuBarView: View {
         since snapshotNow: Date,
         now: Date
     ) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
                 Image(systemName: pending.icon.rawValue)
                 Text(pending.name)
-                Spacer()
+                Spacer(minLength: 12)
                 Text(pendingLabel(pending, since: snapshotNow, now: now))
+                    .monospacedDigit()
                     .foregroundStyle(.secondary)
             }
-            HStack(spacing: 8) {
+            .font(.callout)
+            HStack(spacing: 10) {
                 Button("已完成") {
                     onSend(.complete(reminderID: pending.reminderID, cycleID: pending.cycleID))
                 }
@@ -187,7 +206,6 @@ struct MenuBarView: View {
             }
             .font(.caption)
         }
-        .font(.callout)
     }
 
     private func pendingLabel(
