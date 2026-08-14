@@ -14,7 +14,7 @@ LoopCue（叮刻）是一款 macOS 菜单栏常驻的渐进式周期提醒器：
 - M1-C Step 2 已完成：设置页（通知权限修复入口、新建提醒默认覆盖显示器/离开阈值、登录启动、删除所有本地数据）、删除提醒级联清理通知与 Overlay、动态通知 Category（正文用 `config.message`、完成按钮自定义文案、`userInfo` 补 `schemaVersion`/`effectID`）。
 - M1-C Step 3 已完成：首次启动 Onboarding（说明 → 模板选择 → 创建后申请通知权限 → 可选登录启动，不再启动时抢权限/自动建模板）、Scheduler 按事件点唤醒 + 30 秒 checkpoint（门控期不写库）、UI 倒计时独立 1 秒展示、`remainingToWeak` 使用轮次策略快照、菜单栏「立即提醒一次」。116 个单元测试通过。
 - 通知提交结果诊断已完成：弱提醒提交后菜单栏显示成功/跳过/失败；已授权但横幅关闭时提示「仅进通知中心」；设置页展示「横幅/声音已关闭」。117 个单元测试通过。
-- M2 已启动：App Sandbox 已接入（`ENABLE_APP_SANDBOX` + 最小 entitlements，Debug/Release 签名均已验证嵌入）、签名链路打通（team `V3VLU2P2MZ`）。待办：M1-C 真机验证清单（第 7 节）、M2 沙盒真机回归、Overlay 真机矩阵、产品决策、日志审计、签名公证、数据模型冻结。详见 `docs/LoopCue-Development-Progress-v0.1.md`。
+- M2 已启动：App Sandbox 已接入（`ENABLE_APP_SANDBOX` + 最小 entitlements，Debug/Release 签名均已验证嵌入）、签名链路打通（team `V3VLU2P2MZ`）。代码侧加固已完成（2026-08-14）：日志审计（7 类子系统全覆盖、不记敏感内容）、强提醒无障碍默认焦点、数据模型 v1 冻结（schema 版本元数据 + 4 个迁移测试，总数 121 个）、上架审核预检清单（`docs/LoopCue-Store-Review-Preflight-v0.1.md`）、`scripts/build.sh` 内置工程生成。待办：M1-C 真机验证清单（第 7 节，已整理为可勾选表格）、M2 沙盒真机回归、Overlay 真机矩阵、产品决策、性能基线、签名公证。详见 `docs/LoopCue-Development-Progress-v0.1.md`。
 
 ## 目录结构
 
@@ -68,7 +68,8 @@ make open       # 生成并打开 Xcode
 | --- | --- |
 | `docs/LoopCue-PRD-v0.1.md` | 产品需求文档 |
 | `docs/LoopCue-Technical-Design-v0.1.md` | 技术方案 |
-| `docs/LoopCue-Development-Progress-v0.1.md` | 开发进展与待办（持续更新） |
+| `docs/LoopCue-Development-Progress-v0.1.md` | 开发进展与待办（持续更新，含真机验证勾选表格） |
+| `docs/LoopCue-Store-Review-Preflight-v0.1.md` | 上架审核预检清单（M2） |
 | `docs/macOS-Dev-Specs-Reference-v0.1.md` | 外部规范速览 |
 | `AGENTS.md` | 面向 AI 编码 agent 的项目指引 |
 
