@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 /// 事件点调度器：按下一事件/checkpoint 唤醒 Engine.reconcile
 /// （技术方案 8.7 / 18）。
@@ -11,6 +12,11 @@ import Foundation
 actor Scheduler {
     private let engine: ReminderEngine
     private var task: Task<Void, Never>?
+    /// 子系统日志（技术方案 17）：只记录唤醒原因与间隔，不记录提醒内容。
+    private static let logger = Logger(
+        subsystem: "com.loopcue.LoopCue",
+        category: "scheduler"
+    )
 
     init(engine: ReminderEngine) {
         self.engine = engine
@@ -34,6 +40,7 @@ actor Scheduler {
     private func tick() async {
         try? await engine.reconcile(now: Date())
         let delay = await nextWakeDelay() ?? SchedulerPolicy.checkpointInterval
+        Self.logger.debug("下次唤醒间隔: \(delay.components.seconds, privacy: .public)s")
         try? await Task.sleep(for: delay)
     }
 

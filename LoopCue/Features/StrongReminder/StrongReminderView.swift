@@ -19,6 +19,10 @@ struct StrongReminderView: View {
     let onSnooze: (UUID, UUID) -> Void
     let onDismiss: (UUID, UUID) -> Void
 
+    /// 默认焦点落在完成按钮（技术方案 11.4）。
+    /// 最低系统 macOS 13，`.defaultFocus` 需 macOS 14+，故用 FocusState。
+    @FocusState private var completionFocused: Bool
+
     private var canSnooze: Bool { item.snoozeCount < item.maxSnoozeCount }
 
     var body: some View {
@@ -60,6 +64,7 @@ struct StrongReminderView: View {
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
             .keyboardShortcut(.defaultAction)
+            .focused($completionFocused)
             .accessibilityHint("结束本轮提醒，开始新一轮")
 
             HStack(spacing: 12) {
@@ -84,6 +89,10 @@ struct StrongReminderView: View {
         .background(.black.opacity(0.88))
         .foregroundStyle(.white)
         .accessibilityElement(children: .contain)
+        .onAppear {
+            // 主卡片展示时焦点默认落在完成按钮（技术方案 11.4）。
+            completionFocused = true
+        }
     }
 
     /// 「这项行动已经等待 X 分钟」（PRD 10.3）。

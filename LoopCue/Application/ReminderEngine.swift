@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 /// 唯一业务写入口（技术方案 4.2 / M0-C）。
 ///
@@ -24,6 +25,12 @@ actor ReminderEngine {
     private var previousLastInputAt: Date?
     private let snapshotContinuation: AsyncStream<AppSnapshot>.Continuation
     let snapshots: AsyncStream<AppSnapshot>
+    /// 子系统日志（技术方案 17）：只记录状态、错误码与匿名本地 UUID，
+    /// 不记录提醒正文、完成文案或用户输入。
+    private static let logger = Logger(
+        subsystem: "com.loopcue.LoopCue",
+        category: "engine"
+    )
 
     init(
         store: any ReminderStore,
@@ -245,6 +252,7 @@ actor ReminderEngine {
 
     private func create(_ config: ReminderConfig, now: Date) throws {
         guard case .success = ReminderValidation.validate(config) else {
+            Self.logger.error("创建提醒被拒绝: 配置校验失败")
             throw ReminderEngineError.invalidConfig
         }
         let cycle = ReminderCycle(
@@ -292,9 +300,11 @@ actor ReminderEngine {
 
     private func update(id: UUID, config: ReminderConfig, mode: ApplyMode, now: Date) throws {
         guard case .success = ReminderValidation.validate(config) else {
+            Self.logger.error("更新提醒被拒绝: 配置校验失败")
             throw ReminderEngineError.invalidConfig
         }
         guard let item = try store.loadReminders().first(where: { $0.config.id == id }) else {
+            Self.logger.warning("更新提醒失败: 提醒不存在 id=\(id.uuidString, privacy: .private)")
             return
         }
         // id 是 let 常量，编辑必须保留原 ID，因此用 init 重建配置。
@@ -356,7 +366,14 @@ actor ReminderEngine {
             let cycle = item.cycle,
             cycle.id == cycleID
         else {
-            return // stale cycle：无副作用
+            // stale cycle：无副作用（技术方案 7.2 幂等）。记录诊断指标，
+            // 便于定位旧通知/旧覆盖窗口回调影响新一轮的问题。
+            if let (reminderID, cycleID) = intent.cycleIdentity {
+                Self.logger.notice(
+                    "忽略过期回执: reminder=\(reminderID.uuidString, privacy: .private) cycle=\(cycleID.uuidString, privacy: .private)"
+                )
+            }
+            return
         }
         var reduction = ReminderReducer.apply(intent, to: cycle, now: now)
         // 完成/跳过会创建新一轮；新一轮必须按「当前配置」重新拍策略快照，

@@ -1,5 +1,6 @@
 import CoreData
 import Foundation
+import os
 
 /// 基于 Core Data 的本地仓库。
 ///
@@ -8,6 +9,16 @@ import Foundation
 /// 迁移与查询；无需额外的 .xcdatamodeld 文件即可在 CLI 中构建与测试。
 final class CoreDataReminderStore: ReminderStore, @unchecked Sendable {
     private let container: NSPersistentContainer
+    /// 子系统日志（技术方案 17）：只记录迁移/事务/checkpoint 错误，
+    /// 不记录提醒正文、完成文案或用户输入。
+    private static let logger = Logger(
+        subsystem: "com.loopcue.LoopCue",
+        category: "persistence"
+    )
+    /// 数据模型 v1 冻结标记（技术方案 9.2 / M2 数据模型冻结）：
+    /// 写入持久化存储元数据，供未来迁移判断与诊断。
+    static let schemaVersion = 1
+    private static let schemaVersionKey = "LoopCueSchemaVersion"
 
     init(inMemory: Bool = false, persistentStoreURL: URL? = nil) throws {
         container = NSPersistentContainer(
@@ -29,7 +40,35 @@ final class CoreDataReminderStore: ReminderStore, @unchecked Sendable {
         container.loadPersistentStores { _, error in
             loadError = error
         }
-        if let loadError { throw loadError }
+        if let loadError {
+            Self.logger.error("打开持久化存储失败: \(loadError, privacy: .public)")
+            throw loadError
+        }
+        // 加载成功后从 coordinator 取真实 store 记录 schema 版本。
+        if let store = container.persistentStoreCoordinator.persistentStores.first {
+            Self.recordSchemaVersion(in: store)
+        }
+    }
+
+    /// 在存储元数据中记录/校验数据模型版本：低于当前版本视为迁移
+    /// （v1 无历史版本，仅记录）；高于当前版本时告警不覆盖数据。
+    private static func recordSchemaVersion(in store: NSPersistentStore) {
+        var metadata = store.metadata ?? [:]
+        let existing = metadata[schemaVersionKey] as? Int
+        if let existing {
+            if existing < schemaVersion {
+                Self.logger.notice("数据模型迁移: v\(existing) → v\(schemaVersion)")
+            } else if existing > schemaVersion {
+                Self.logger.error(
+                    "存储数据版本 v\(existing) 高于当前支持 v\(schemaVersion)，请升级应用；不修改原数据"
+                )
+                return
+            } else {
+                return
+            }
+        }
+        metadata[schemaVersionKey] = schemaVersion
+        store.metadata = metadata
     }
 
     // MARK: - ReminderStore
@@ -38,7 +77,16 @@ final class CoreDataReminderStore: ReminderStore, @unchecked Sendable {
         try perform { context in
             let request = NSFetchRequest<NSManagedObject>(entityName: "ManagedReminder")
             let objects = try context.fetch(request)
-            return try objects.compactMap { try Self.decode($0) }
+            // 隔离单条坏数据：decode 失败只记录并跳过该条，其余提醒继续工作
+            // （技术方案 13.2「数据模型字段非法 → 隔离单条并记录错误」）。
+            return objects.compactMap { object in
+                do {
+                    return try Self.decode(object)
+                } catch {
+                    Self.logger.error("跳过损坏的提醒行: \(error, privacy: .public)")
+                    return nil
+                }
+            }
         }
     }
 
@@ -222,6 +270,7 @@ final class CoreDataReminderStore: ReminderStore, @unchecked Sendable {
                 }
                 result = .success(value)
             } catch {
+                Self.logger.error("持久化事务失败: \(error, privacy: .public)")
                 result = .failure(error)
             }
         }
@@ -282,7 +331,8 @@ final class CoreDataReminderStore: ReminderStore, @unchecked Sendable {
 
     // MARK: - Model
 
-    private static func makeModel() -> NSManagedObjectModel {
+    /// 编程式数据模型（internal 供测试复用构造 fixture，避免模型漂移）。
+    static func makeModel() -> NSManagedObjectModel {
         let model = NSManagedObjectModel()
 
         let reminder = NSEntityDescription()

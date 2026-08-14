@@ -1,6 +1,7 @@
 import AppKit
 import CoreGraphics
 import Foundation
+import os
 
 /// 只读取「距离上次键鼠输入的时长」的空闲检测（技术方案 8.6）。
 protocol IdleTimeProviding: Sendable {
@@ -32,6 +33,12 @@ final class SystemContextMonitor: SystemContextProviding, @unchecked Sendable {
     private var lastInputAt: Date?
     private var observers: [NSObjectProtocol] = []
     private var onContextChange: (() -> Void)?
+    /// 子系统日志（技术方案 17）：只记录 active/idle 与睡眠/锁屏状态变化，
+    /// 不记录具体输入内容、提醒正文或用户输入。
+    private static let logger = Logger(
+        subsystem: "com.loopcue.LoopCue",
+        category: "activity"
+    )
 
     init(idleProvider: any IdleTimeProviding = CoreGraphicsIdleTimeProvider()) {
         self.idleProvider = idleProvider
@@ -104,22 +111,31 @@ final class SystemContextMonitor: SystemContextProviding, @unchecked Sendable {
 
     private func setAwake(_ value: Bool) {
         lock.lock()
+        let changed = isAwake != value
         isAwake = value
         lock.unlock()
+        if changed {
+            Self.logger.info("睡眠状态变化: awake=\(value, privacy: .public)")
+        }
         onContextChange?()
     }
 
     private func setSessionActive(_ value: Bool, refreshInput: Bool) {
         lock.lock()
+        let changed = isSessionActive != value
         isSessionActive = value
         if refreshInput {
             lastInputAt = Date()
         }
         lock.unlock()
+        if changed {
+            Self.logger.info("会话状态变化: active=\(value, privacy: .public)")
+        }
         onContextChange?()
     }
 
     private func clockChanged() {
+        Self.logger.notice("系统时间变化，触发重算")
         onContextChange?()
     }
 }
