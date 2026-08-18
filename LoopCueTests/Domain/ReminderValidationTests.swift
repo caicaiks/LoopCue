@@ -40,6 +40,30 @@ final class ReminderValidationTests: XCTestCase {
         expectValidationPass(makeValidConfig())
     }
 
+    func testScheduleValidation() {
+        var config = makeValidConfig()
+        config.activeSchedule = .alwaysOn
+        expectValidationPass(config)
+
+        config.activeSchedule = ActiveSchedule(weekdayMask: [1], startMinute: -1, endMinute: 1440)
+        expectValidationFailure(config, .scheduleStartMinuteOutOfRange)
+
+        config.activeSchedule = ActiveSchedule(weekdayMask: [1], startMinute: 0, endMinute: 0)
+        expectValidationFailure(config, .scheduleEndMinuteOutOfRange)
+
+        config.activeSchedule = ActiveSchedule(weekdayMask: [1], startMinute: 1440, endMinute: 1440)
+        expectValidationFailure(config, .scheduleStartMinuteOutOfRange)
+
+        config.activeSchedule = ActiveSchedule(weekdayMask: [1], startMinute: 600, endMinute: 600)
+        expectValidationFailure(config, .scheduleCrossesMidnight)
+
+        config.activeSchedule = ActiveSchedule(weekdayMask: [1], startMinute: 600, endMinute: 500)
+        expectValidationFailure(config, .scheduleCrossesMidnight)
+
+        config.activeSchedule = ActiveSchedule(weekdayMask: [], startMinute: 0, endMinute: 1440)
+        expectValidationFailure(config, .scheduleWeekdayEmpty)
+    }
+
     func testNameLengthBoundaries() {
         var config = makeValidConfig()
         config.name = ""

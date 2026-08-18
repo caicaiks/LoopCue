@@ -38,7 +38,11 @@ enum ReminderReducer {
                     cycle.phase = .weakPending
                     cycle.weakTriggeredAt = now
                     events.append(.init(reminderID: cycle.reminderID, cycleID: cycle.id, type: .weakTriggered, occurredAt: now))
-                    effects.append(.sendWeakNotification(reminderID: cycle.reminderID, cycleID: cycle.id))
+                    effects.append(.sendWeakNotification(
+                        reminderID: cycle.reminderID,
+                        cycleID: cycle.id,
+                        content: NotificationContent()
+                    ))
                 }
 
             case .weakPending:
@@ -67,7 +71,11 @@ enum ReminderReducer {
                     cycle.phase = .weakPending
                     cycle.weakTriggeredAt = now
                     events.append(.init(reminderID: cycle.reminderID, cycleID: cycle.id, type: .weakRepeated, occurredAt: now))
-                    effects.append(.sendWeakNotification(reminderID: cycle.reminderID, cycleID: cycle.id))
+                    effects.append(.sendWeakNotification(
+                        reminderID: cycle.reminderID,
+                        cycleID: cycle.id,
+                        content: NotificationContent()
+                    ))
                 }
 
             case .strongPending:
@@ -93,7 +101,8 @@ enum ReminderReducer {
     /// 应用带回执的 Intent。cycleID 与当前轮不一致时返回无副作用的归约。
     static func apply(_ intent: ReminderIntent, to cycle: ReminderCycle, now: Date) -> Reduction {
         switch intent {
-        case .create, .update, .delete, .setEnabled:
+        case .create, .update, .delete, .setEnabled,
+             .pauseReminder, .resumeReminder, .pauseAll, .resumeAll:
             // 配置类 Intent 不改变轮次状态，由 Engine 负责。
             return .unchanged(cycle)
         case .complete(let reminderID, let cycleID),
@@ -152,7 +161,11 @@ enum ReminderReducer {
             return Reduction(
                 cycle: cycle,
                 events: [.init(reminderID: reminderID, cycleID: cycleID, type: .weakTriggered, occurredAt: now)],
-                effects: [.sendWeakNotification(reminderID: reminderID, cycleID: cycleID)]
+                effects: [.sendWeakNotification(
+                    reminderID: reminderID,
+                    cycleID: cycleID,
+                    content: NotificationContent()
+                )]
             )
 
         case .dismissOverlay(let reminderID, let cycleID):
@@ -167,7 +180,8 @@ enum ReminderReducer {
                 effects: [.dismissStrongOverlay(reminderID: reminderID, cycleID: cycleID)]
             )
 
-        case .create, .update, .delete, .setEnabled:
+        case .create, .update, .delete, .setEnabled,
+             .pauseReminder, .resumeReminder, .pauseAll, .resumeAll:
             return .unchanged(cycle)
         }
     }
@@ -177,6 +191,56 @@ enum ReminderReducer {
         var cycle = cycle
         cycle.hasObservedPresence = true
         return cycle
+    }
+
+    /// 不消耗时间，仅根据累计时长与当前阶段检查边界转换。
+    ///
+    /// 用于编辑「立即应用」：策略快照更新后，用已累计的有效时长对新的
+    /// 周期 / 升级阈值重新结算，可能连续满足多个条件（技术方案 6.2）。
+    static func reconcileBoundaries(_ cycle: ReminderCycle, now: Date) -> Reduction {
+        var cycle = cycle
+        var events: [ReminderEvent] = []
+        var effects: [ReminderEffect] = []
+
+        var didChange = true
+        while didChange {
+            didChange = false
+            switch cycle.phase {
+            case .counting:
+                guard cycle.activeElapsed >= cycle.policy.interval else { break }
+                cycle.phase = .weakPending
+                cycle.weakTriggeredAt = now
+                events.append(
+                    .init(reminderID: cycle.reminderID, cycleID: cycle.id, type: .weakTriggered, occurredAt: now)
+                )
+                effects.append(.sendWeakNotification(
+                    reminderID: cycle.reminderID,
+                    cycleID: cycle.id,
+                    content: NotificationContent()
+                ))
+                didChange = true
+
+            case .weakPending:
+                guard let delay = cycle.policy.escalationDelay,
+                      cycle.escalationElapsed >= delay
+                else { break }
+                cycle.phase = .strongPending
+                cycle.strongTriggeredAt = now
+                events.append(
+                    .init(reminderID: cycle.reminderID, cycleID: cycle.id, type: .strongTriggered, occurredAt: now)
+                )
+                effects.append(.presentStrongOverlay(reminderID: cycle.reminderID, cycleID: cycle.id))
+                didChange = true
+
+            case .snoozed, .strongPending:
+                break
+            }
+        }
+
+        guard !events.isEmpty || !effects.isEmpty else {
+            return .unchanged(cycle)
+        }
+        return Reduction(cycle: cycle, events: events, effects: effects)
     }
 
     /// 处理闲置状态。只有「先观察到在场，再离开达到阈值」才自动完成（技术方案 6.4）。

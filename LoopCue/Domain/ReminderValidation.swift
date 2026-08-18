@@ -9,6 +9,10 @@ enum ReminderValidationError: Error, Equatable {
     case completionLabelTooLong
     case intervalOutOfRange
     case escalationDelayOutOfRange
+    case scheduleStartMinuteOutOfRange
+    case scheduleEndMinuteOutOfRange
+    case scheduleCrossesMidnight
+    case scheduleWeekdayEmpty
     case snoozeDurationOutOfRange
     case snoozeCountOutOfRange
 }
@@ -46,6 +50,17 @@ enum ReminderValidation {
                 return .failure(.escalationDelayOutOfRange)
             }
         }
+        let schedule = config.activeSchedule
+        guard schedule.startMinute >= 0, schedule.startMinute < 1440 else {
+            return .failure(.scheduleStartMinuteOutOfRange)
+        }
+        guard schedule.endMinute > 0, schedule.endMinute <= 1440 else {
+            return .failure(.scheduleEndMinuteOutOfRange)
+        }
+        guard schedule.startMinute < schedule.endMinute else {
+            return .failure(.scheduleCrossesMidnight)
+        }
+        guard !schedule.weekdayMask.isEmpty else { return .failure(.scheduleWeekdayEmpty) }
         guard config.snoozeDuration >= snoozeDurationMin, config.snoozeDuration <= snoozeDurationMax else {
             return .failure(.snoozeDurationOutOfRange)
         }
@@ -55,4 +70,3 @@ enum ReminderValidation {
         return .success(())
     }
 }
-
